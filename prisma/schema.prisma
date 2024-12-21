@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id              String                @id @default(cuid())
+  name            String?
+  email           String?               @unique
+  password        String?
+  emailVerified   DateTime?
+  image           String?
+  characters      Character[]
+}
+
+
+model Character {
+  id              String                @id @default(cuid())
+  roomId          String
+  userId          String
+  name            String
+  class           Class
+  image           String?
+  maxHp           Int
+  currentHp       Int
+  maxCost         Int
+  currentCost     Int
+  money           Int
+  attack          Int
+  defense         Int
+  dodge           Int
+  crit            Int
+  speed           Int
+  rowPos          Int
+  colPos          Int
+  hasMoved        Boolean
+  hasActioned     Boolean
+  hasUsedUltimate Boolean
+  status          CharacterStatus?
+  skills          CharacterSkill[]
+  inventory       Item[]
+  battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  protectedBy     CharacterStatus[]     @relation("ProtectorRelation")
+}
+
+
+model CharacterStatus {
+  id                    String          @id @default(cuid())
+  characterId           String          @unique
+  isDead                Boolean
+  isStun                Boolean
+  isConfused            Boolean
+  isDark                Boolean
+  isImmortal            Boolean
+  attackBuffedAmount    Int
+  attackBuffedTurn      Int
+  defenseBuffedAmount   Int
+  defenseBuffedTurn     Int
+  protectorId           String?
+  protectedTurn         Int
+  dotDamageTurn         Int
+  dotDamageAmount       Int
+  character             Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  protector             Character?      @relation("ProtectorRelation", fields: [protectorId], references: [id], onDelete: SetNull)
+}
+
+
+model EntityStatus {
+  id              String                @id @default(cuid())
+  isDead          Boolean
+  isStun          Boolean
+  isConfused      Boolean
+  buffedAmount    Int
+  buffedTurn      Int
+  dotDamageTurn   Int
+  dotDamageAmount Int
+}
+
+
+model Monster {
+  id              String                @id @default(cuid())
+  dungeonId       String
+  name            String
+  description     String?
+  maxHp           Int
+  attack          Int
+  defense         Int
+  dodge           Int
+  crit            Int
+  speed           Int
+  reward          Int
+  skills          MonsterSkill[]
+  items           Item[]
+  dungeon         Dungeon               @relation(fields: [dungeonId], references: [id], onDelete: Cascade)
+}
+
+
+model Entity {
+  id              String                @id @default(cuid())
+  roomId          String
+  name            String
+  description     String?
+  maxHp           Int
+  attack          Int
+  defense         Int
+  dodge           Int
+  crit            Int
+  speed           Int
+  reward          Int
+  rowPos          Int
+  colPos          Int
+  items           Item[]
+  battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+
+model Item {
+  id              String                @id @default(cuid())
+  characterId     String
+  monsterId       String
+  entityId        String
+  name            String
+  description     String?
+  sellPrice       Int
+  buyPrice        Int
+  isStoreItem     Boolean
+  character       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  monster         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
+  entity          Entity                @relation(fields: [entityId], references: [id], onDelete: Cascade)
+}
+
+
+model Chat {
+  id              String                @id @default(cuid())
+  createdAt       DateTime              @default(now())
+  sender          String
+  chatType        ChatType
+}
+
+
+model CharacterSkill {
+  id              String                @id @default(cuid())
+  characterId     String
+  name            String
+  description     String?
+  class           Class
+  range           SkillRange
+  isEntire        Boolean
+  isUltimate      Boolean
+  requiredCost    Int
+  requiredHp      Int
+  character       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+}
+
+
+model AIResponse {
+  id              String                @id @default(cuid())
+  rowPos          Int
+  colPos          Int
+  hpChange        Int
+  defenseChange   Int
+  attackChange    Int
+
+}
+
+
+model MonsterSkill {
+  id              String                @id @default(cuid())
+  monsterId       String
+  name            String
+  description     String?
+  range           SkillRange
+  isEntire        Boolean
+  monster         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
+}
+
+
+model Dungeon {
+  id              String                @id @default(cuid())
+  name            String
+  description     String?
+  difficulty      Difficulty
+  minMember       Int?
+  maxMember       Int?
+  monsters        Monster[]
+}
+
+
+model BattleRoom {
+  id              String                @id @default(cuid())
+  name            String?
+  round           Int
+  numActions      Int
+  roomStatus      RoomStatus
+  participants    Character[]
+  entities        Entity[]
+}
+
+
+enum ChatType {
+  Chat
+  System
+  Action
+  Result
+  Debuff
+  Buff
+}
+
+
+enum Class {
+  Gladiolus
+  Saintpaulia
+  Saffron
+  Cypress
+  Blackthorn
+}
+
+
+enum SkillRange {
+  short
+  medium
+  long
+}
+
+enum Difficulty {
+  Easy
+  Normal
+  Hard
+}
+
+
+enum ActionType {
+  Attack
+  Buff
+  Debuff
+
+}
+
+
+enum RoomStatus {
+  Waiting
+  Processing
+  User
+  Monster
+  End
+}
