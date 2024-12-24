@@ -10,8 +10,8 @@ import { Input } from '@/components/ui/input';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { gelasio } from '@/static/fonts';
 import Link from 'next/link';
+import { handleSignUp } from '@/lib/actions';
 
 export function SignInForm() {
     const [error, setError] = useState<string | undefined>('');
@@ -34,7 +34,12 @@ export function SignInForm() {
     async function onSubmit(values: z.infer<typeof signInFormSchema>) {
         setIsLoading(true);
         try {
-            // Authorize
+            const result = await handleSignUp(values);
+            if (result.success && result.nextStep != 'CONFIRM_SIGN_UP') {
+                router.push('/dashboard');
+            } else if (result.success && result.nextStep == 'CONFIRM_SIGN_UP') {
+                router.push('/auth/verify/signup');
+            }
         } catch (error) {
             setError('클라이언트: 로그인 오류.');
             throw error;
@@ -42,7 +47,7 @@ export function SignInForm() {
     }
 
     return (
-        <div className={`${gelasio.className} h-screen`}>
+        <div className={`h-screen`}>
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
@@ -131,15 +136,18 @@ export function SignUpForm() {
     async function onSubmit(values: z.infer<typeof signInFormSchema>) {
         setIsLoading(true);
         try {
-            // Authorize
+            const result = await handleSignUp(values);
+            if (result.success) {
+                router.push('/auth/verify/signup');
+            }
         } catch (error) {
-            setError('클라이언트: 로그인 오류.');
+            setError('Sign up Error');
             throw error;
         }
     }
 
     return (
-        <div className={`${gelasio.className} grid grid-cols-[1fr_1.2fr_1fr] h-screen`}>
+        <div className={`grid grid-cols-[1fr_1.2fr_1fr] h-screen`}>
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
@@ -221,6 +229,76 @@ export function SignUpForm() {
                             disabled={isLoading}
                             className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
                             {isLoading ? 'Loading' : 'Register'}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+        </div>
+    );
+}
+
+export function VerifySignUpForm() {
+    const [error, setError] = useState<string | undefined>('');
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const router = useRouter();
+
+    const verifySignUpFormSchema = z.object({
+        code: z.string().min(1),
+    });
+
+    const form = useForm<z.infer<typeof verifySignUpFormSchema>>({
+        resolver: zodResolver(verifySignUpFormSchema),
+        defaultValues: {
+            code: '',
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof verifySignUpFormSchema>) {
+        setIsLoading(true);
+        try {
+            const result = await handleSignUp(values);
+            if (result.success) {
+                router.push('/auth/verify/signup');
+            }
+        } catch (error) {
+            setError('Sign up Error');
+            throw error;
+        }
+    }
+
+    return (
+        <div className={`grid grid-cols-[1fr_1.2fr_1fr] h-screen`}>
+            <Form {...form}>
+                <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="py-10 px-20 w-full grid grid-rows-[1fr_3fr_1fr] h-full col-start-2 bg-bright-red">
+                    <FormLabel className="text-main-white text-4xl text-center self-center">Verification</FormLabel>
+                    <div className="flex flex-col items-center justify-center w-full h-full">
+                        <div className="gap-3 flex flex-col w-full">
+                            <FormField
+                                control={form.control}
+                                name="code"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input
+                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
+                                                placeholder="Email"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-row justify-center items-center">
+                        <Button
+                            type="submit"
+                            disabled={isLoading}
+                            className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
+                            {isLoading ? 'Loading' : 'Verify'}
                         </Button>
                     </div>
                 </form>
