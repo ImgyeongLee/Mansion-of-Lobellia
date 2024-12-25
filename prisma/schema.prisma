@@ -21,67 +21,46 @@ model User {
 
 
 model Character {
-  id              String                @id @default(cuid())
-  roomId          String                @default("")
-  userId          String
-  name            String
-  class           Class
-  image           String?               @default("")
-  maxHp           Int
-  currentHp       Int
-  maxCost         Int
-  currentCost     Int
-  money           Int                   @default(0)
-  attack          Int
-  defense         Int
-  dodge           Int
-  crit            Int
-  speed           Int
-  rowPos          Int                   @default(-1)
-  colPos          Int                   @default(-1)
-  hasMoved        Boolean               @default(false)
-  hasActioned     Boolean               @default(false)
-  hasUsedUltimate Boolean               @default(false)
-  status          CharacterStatus?
-  skills          CharacterSkill[]
-  inventory       Item[]
-  battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  protectedBy     CharacterStatus[]     @relation("ProtectorRelation")
+  id                              String                @id @default(cuid())
+  roomId                          String                @default("")
+  userId                          String
+  name                            String
+  class                           Class
+  image                           String?               @default("")
+  maxHp                           Int
+  currentHp                       Int
+  maxCost                         Int
+  currentCost                     Int
+  money                           Int                   @default(0)
+  attack                          Int
+  defense                         Int
+  dodge                           Int
+  crit                            Int
+  speed                           Int
+  rowPos                          Int                   @default(-1)
+  colPos                          Int                   @default(-1)
+  hasMoved                        Boolean               @default(false)
+  hasActioned                     Boolean               @default(false)
+  hasUsedUltimate                 Boolean               @default(false)
+  isDead                          Boolean               @default(false)
+  isStun                          Boolean               @default(false)
+  isConfused                      Boolean               @default(false)
+  isDark                          Boolean               @default(false)
+  isImmortal                      Boolean               @default(false)
+  attackBuffedAmount              Int                   @default(0)
+  attackBuffedTurn                Int                   @default(0)
+  defenseBuffedAmount             Int                   @default(0)
+  defenseBuffedTurn               Int                   @default(0)
+  protectorId                     String?         
+  protectedTurn                   Int                   @default(0)
+  dotDamageTurn                   Int                   @default(0)
+  dotDamageAmount                 Int                   @default(0)
+  skills                          CharacterSkill[]
+  inventory                       Item[]
+  battleRoom                      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user                            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
-model CharacterStatus {
-  id                    String          @id @default(cuid())
-  characterId           String          @unique
-  isDead                Boolean
-  isStun                Boolean
-  isConfused            Boolean
-  isDark                Boolean
-  isImmortal            Boolean
-  attackBuffedAmount    Int
-  attackBuffedTurn      Int
-  defenseBuffedAmount   Int
-  defenseBuffedTurn     Int
-  protectorId           String?
-  protectedTurn         Int
-  dotDamageTurn         Int
-  dotDamageAmount       Int
-  character             Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  protector             Character?      @relation("ProtectorRelation", fields: [protectorId], references: [id], onDelete: SetNull)
-}
-
-
-model EntityStatus {
-  id              String                @id @default(cuid())
-  isDead          Boolean
-  isStun          Boolean
-  isConfused      Boolean
-  buffedAmount    Int
-  buffedTurn      Int
-  dotDamageTurn   Int
-  dotDamageAmount Int
-}
 
 
 model Monster {
@@ -116,6 +95,13 @@ model Entity {
   reward          Int
   rowPos          Int
   colPos          Int
+  isDead          Boolean               @default(false)
+  isStun          Boolean               @default(false)
+  isConfused      Boolean               @default(false)
+  buffedAmount    Int                   @default(0)
+  buffedTurn      Int                   @default(0)
+  dotDamageTurn   Int                   @default(0)
+  dotDamageAmount Int                   @default(0)
   items           Item[]
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
@@ -232,18 +218,11 @@ enum SkillRange {
   long
 }
 
+
 enum Difficulty {
   Easy
   Normal
   Hard
-}
-
-
-enum ActionType {
-  Attack
-  Buff
-  Debuff
-
 }
 
 
