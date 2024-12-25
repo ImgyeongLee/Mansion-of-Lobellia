@@ -55,17 +55,28 @@ model Character {
   protectedTurn                   Int                   @default(0)
   dotDamageTurn                   Int                   @default(0)
   dotDamageAmount                 Int                   @default(0)
+  createdAt                       DateTime              @default(now())
   skills                          CharacterSkill[]
-  inventory                       Item[]
+  inventory                       CharacterInventory[]
   battleRoom                      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user                            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 
+model CharacterInventory {
+  id                              String                @id @default(cuid())
+  characterId                     String
+  itemId                          String
+  amount                          Int                   @default(0)
+  character                       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item                            Item                  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, itemId])
+}
+
 
 model Monster {
   id              String                @id @default(cuid())
-  dungeonId       String
   name            String
   description     String?
   maxHp           Int
@@ -77,7 +88,7 @@ model Monster {
   reward          Int
   skills          MonsterSkill[]
   items           Item[]
-  dungeon         Dungeon               @relation(fields: [dungeonId], references: [id], onDelete: Cascade)
+  dungeon         Dungeon[]
 }
 
 
@@ -102,6 +113,7 @@ model Entity {
   buffedTurn      Int                   @default(0)
   dotDamageTurn   Int                   @default(0)
   dotDamageAmount Int                   @default(0)
+  skills          MonsterSkill[]
   items           Item[]
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
@@ -109,9 +121,7 @@ model Entity {
 
 model Item {
   id                              String                @id @default(cuid())
-  characterId                     String
-  monsterId                       String
-  entityId                        String
+  image                           String?
   name                            String
   description                     String
   sellPrice                       Int                   @default(0)
@@ -126,9 +136,9 @@ model Item {
   dodgeBuff                       Int                   @default(0)
   dotDamageCure                   Boolean               @default(false)
   isConfusedCure                  Boolean               @default(false)
-  character                       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  monster                         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
-  entity                          Entity                @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  monsters                        Monster[]
+  entities                        Entity[]
+  characterInventories            CharacterInventory[]
 }
 
 
@@ -144,17 +154,20 @@ model Chat {
 
 
 model CharacterSkill {
-  id              String                @id @default(cuid())
-  characterId     String
-  name            String
-  description     String?
-  class           Class
-  range           SkillRange
-  isEntire        Boolean
-  isUltimate      Boolean
-  requiredCost    Int
-  requiredHp      Int
-  character       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  id                  String                @id @default(cuid())
+  image               String?
+  name                String
+  description         String?
+  type                SkillType
+  range               SkillRange
+  isAllyTargeting     Boolean
+  isEnemyTargeting    Boolean        
+  isSelfTargeting     Boolean       
+  isEntire            Boolean
+  isUltimate          Boolean
+  requiredCost        Int
+  requiredHp          Int
+  character           Character[]
 }
 
 
@@ -171,35 +184,45 @@ model CharacterSkill {
 
 model MonsterSkill {
   id              String                @id @default(cuid())
-  monsterId       String
+  image           String?
   name            String
   description     String?
   range           SkillRange
+  isSelfTargeting Boolean
   isEntire        Boolean
-  monster         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
+  monster         Monster[]
+  entities        Entity[]
 }
 
 
 model Dungeon {
   id              String                @id @default(cuid())
   name            String
+  size            Int                 
   description     String?
   difficulty      Difficulty
-  minMember       Int?
-  maxMember       Int?
+  minMember       Int
+  maxMember       Int
   monsters        Monster[]
 }
+
 
 
 model BattleRoom {
   id              String                @id @default(cuid())
   name            String
+  dungeonType     String
+  description     String?
+  minMember       Int
+  maxMember       Int
+  difficulty      Difficulty
   round           Int
-  numActions      Int
+  queue           String[]
   roomStatus      RoomStatus
   participants    Character[]
   entities        Entity[]
   chats           Chat[]
+  createdAt       DateTime              @default(now())
 }
 
 
@@ -216,16 +239,24 @@ enum ChatType {
 enum Class {
   Gladiolus
   Saintpaulia
-  Saffron
+  Cypress
+  Blackthorn
+}
+
+enum SkillType {
+  General
+  Gladiolus
+  Saintpaulia
   Cypress
   Blackthorn
 }
 
 
 enum SkillRange {
-  short
-  medium
-  long
+  Self
+  Narrow
+  Normal
+  Wide
 }
 
 
@@ -238,8 +269,8 @@ enum Difficulty {
 
 enum RoomStatus {
   Waiting
-  Processing
   User
   Monster
+  Result
   End
 }
