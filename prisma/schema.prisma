@@ -10,38 +10,38 @@ datasource db {
 
 
 model User {
-  id              String                @id @default(cuid())
-  name            String?
-  email           String?               @unique
-  password        String?
-  emailVerified   DateTime?
+  id              String                @id @default(uuid())
+  name            String
+  email           String                @unique
   image           String?
+  createdAt       DateTime              @default(now())
+  isAdmin         Boolean               @default(false)
   characters      Character[]
 }
 
 
 model Character {
   id              String                @id @default(cuid())
-  roomId          String
+  roomId          String                @default("")
   userId          String
   name            String
   class           Class
-  image           String?
+  image           String?               @default("")
   maxHp           Int
   currentHp       Int
   maxCost         Int
   currentCost     Int
-  money           Int
+  money           Int                   @default(0)
   attack          Int
   defense         Int
   dodge           Int
   crit            Int
   speed           Int
-  rowPos          Int
-  colPos          Int
-  hasMoved        Boolean
-  hasActioned     Boolean
-  hasUsedUltimate Boolean
+  rowPos          Int                   @default(-1)
+  colPos          Int                   @default(-1)
+  hasMoved        Boolean               @default(false)
+  hasActioned     Boolean               @default(false)
+  hasUsedUltimate Boolean               @default(false)
   status          CharacterStatus?
   skills          CharacterSkill[]
   inventory       Item[]
@@ -139,9 +139,11 @@ model Item {
 
 model Chat {
   id              String                @id @default(cuid())
+  roomId          String
   createdAt       DateTime              @default(now())
   sender          String
   chatType        ChatType
+  battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
 
 
@@ -160,15 +162,15 @@ model CharacterSkill {
 }
 
 
-model AIResponse {
-  id              String                @id @default(cuid())
-  rowPos          Int
-  colPos          Int
-  hpChange        Int
-  defenseChange   Int
-  attackChange    Int
+// model AIResponse {
+//   id              String                @id @default(cuid())
+//   rowPos          Int
+//   colPos          Int
+//   hpChange        Int
+//   defenseChange   Int
+//   attackChange    Int
 
-}
+// }
 
 
 model MonsterSkill {
@@ -201,6 +203,7 @@ model BattleRoom {
   roomStatus      RoomStatus
   participants    Character[]
   entities        Entity[]
+  chats           Chat[]
 }
 
 

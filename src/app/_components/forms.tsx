@@ -6,64 +6,77 @@ import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { handleSignUp } from '@/lib/actions';
+import useAuthUser from '@/hooks/use-auth-user';
 
-export function SignInForm() {
+import { CLASS } from '@/static/data';
+import { DiamondMinus, DiamondPlus } from 'lucide-react';
+import { BsDiamond, BsDiamondFill } from 'react-icons/bs';
+import { characterFormSchema } from '@/static/formSchema';
+
+export function CharacterCreationForm() {
+    const user = useAuthUser();
     const [error, setError] = useState<string | undefined>('');
+    const [characterClass, setCharacterClass] = useState<string>('Gladiolus');
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [characterAttack, setCharacterAttack] = useState<number>(1);
+    const [characterDefense, setCharacterDefense] = useState<number>(1);
+    const [characterMaxHp, setCharacterMaxHp] = useState<number>(1);
+    const [characterSpeed, setCharacterSpeed] = useState<number>(1);
+    const [currentPoint, setCurrentPoint] = useState<number>(10);
+    const TOTAL_POINT = 10;
     const router = useRouter();
 
-    const signInFormSchema = z.object({
-        email: z.string().min(1),
-        password: z.string().min(1),
-    });
-
-    const form = useForm<z.infer<typeof signInFormSchema>>({
-        resolver: zodResolver(signInFormSchema),
+    const form = useForm<z.infer<typeof characterFormSchema>>({
+        resolver: zodResolver(characterFormSchema),
         defaultValues: {
-            email: '',
-            password: '',
+            name: '',
+            class: 'Gladiolus',
+            skills: [],
+            attack: 1,
+            defense: 1,
+            maxHp: 1,
+            speed: 1,
         },
     });
 
-    async function onSubmit(values: z.infer<typeof signInFormSchema>) {
+    async function onSubmit(values: z.infer<typeof characterFormSchema>) {
         setIsLoading(true);
         try {
-            const result = await handleSignUp(values);
-            if (result.success && result.nextStep != 'CONFIRM_SIGN_UP') {
-                router.push('/dashboard');
-            } else if (result.success && result.nextStep == 'CONFIRM_SIGN_UP') {
-                router.push('/auth/verify/signup');
-            }
         } catch (error) {
-            setError('클라이언트: 로그인 오류.');
-            throw error;
+            console.log(error);
         }
+        setIsLoading(false);
     }
 
     return (
-        <div className={`h-screen`}>
+        <div className={`grid grid-cols-[1.5fr_1fr] items-center justify-center bg-bright-red select-none`}>
             <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="py-5 px-10 w-full flex flex-col h-full items-center justify-center bg-bright-red">
-                    <div className="flex flex-col w-full h-full items-center justify-center">
-                        <FormLabel className="text-main-white text-3xl self-start mb-8">Sign in</FormLabel>
-                        <div className="gap-6 flex flex-col w-full">
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <div className="flex flex-col w-full h-full items-center justify-center p-10">
+                        <FormLabel className="text-main-white text-3xl self-start mb-8">New Character</FormLabel>
+                        <div className="gap-8 grid grid-cols-2 w-full">
                             <FormField
                                 control={form.control}
-                                name="email"
+                                name="name"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
                                             <Input
                                                 className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                                placeholder="Email"
+                                                placeholder="Name"
                                                 {...field}
                                             />
                                         </FormControl>
@@ -73,236 +86,212 @@ export function SignInForm() {
                             />
                             <FormField
                                 control={form.control}
-                                name="password"
+                                name="class"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
-                                            <Input
-                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                                placeholder="Password"
-                                                {...field}
-                                            />
+                                            <Select
+                                                onValueChange={(value) => {
+                                                    field.onChange(value);
+                                                    setCharacterClass(value);
+                                                }}
+                                                defaultValue={field.value}>
+                                                <SelectTrigger className="w-full ring-0 shadow-none drop-shadow-none rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus:ring-0">
+                                                    <SelectValue placeholder="Select a class" />
+                                                </SelectTrigger>
+                                                <SelectContent className="ring-transparent">
+                                                    <SelectGroup>
+                                                        <SelectLabel>Class</SelectLabel>
+                                                        {CLASS.map((item) => (
+                                                            <SelectItem key={item} value={item}>
+                                                                {item}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
                         </div>
+                        <div className="my-5">✦</div>
+                        <div className="text-sm mb-4">Available Additional Stat Points: {currentPoint}</div>
+                        <div className="flex flex-row w-full items-center justify-center gap-2">
+                            <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
+                                <div className="text-xl mb-4">Health</div>
+                                <div className="flex flex-row gap-1 mb-6">
+                                    {Array(characterMaxHp)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamondFill />
+                                            </span>
+                                        ))}
+                                    {Array(5 - characterMaxHp)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamond />
+                                            </span>
+                                        ))}
+                                </div>
+                                <div className="flex flex-row gap-1">
+                                    <DiamondPlus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterMaxHp >= 5) return;
+                                            if (currentPoint <= 0) return;
+                                            setCharacterMaxHp((prev) => prev + 1);
+                                            setCurrentPoint((prev) => prev - 1);
+                                        }}
+                                    />
+                                    <DiamondMinus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterMaxHp <= 1) return;
+                                            if (currentPoint >= TOTAL_POINT) return;
+                                            setCharacterMaxHp((prev) => prev - 1);
+                                            setCurrentPoint((prev) => prev + 1);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
+                                <div className="text-xl mb-4">Attack</div>
+                                <div className="flex flex-row gap-1 mb-6">
+                                    {Array(characterAttack)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamondFill />
+                                            </span>
+                                        ))}
+                                    {Array(5 - characterAttack)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamond />
+                                            </span>
+                                        ))}
+                                </div>
+                                <div className="flex flex-row gap-1">
+                                    <DiamondPlus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterAttack >= 5) return;
+                                            if (currentPoint <= 0) return;
+                                            setCharacterAttack((prev) => prev + 1);
+                                            setCurrentPoint((prev) => prev - 1);
+                                        }}
+                                    />
+                                    <DiamondMinus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterAttack <= 1) return;
+                                            if (currentPoint >= TOTAL_POINT) return;
+                                            setCharacterAttack((prev) => prev - 1);
+                                            setCurrentPoint((prev) => prev + 1);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
+                                <div className="text-xl mb-4">Defense</div>
+                                <div className="flex flex-row gap-1 mb-6">
+                                    {Array(characterDefense)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamondFill />
+                                            </span>
+                                        ))}
+                                    {Array(5 - characterDefense)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamond />
+                                            </span>
+                                        ))}
+                                </div>
+                                <div className="flex flex-row gap-1">
+                                    <DiamondPlus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterDefense >= 5) return;
+                                            if (currentPoint <= 0) return;
+                                            setCharacterDefense((prev) => prev + 1);
+                                            setCurrentPoint((prev) => prev - 1);
+                                        }}
+                                    />
+                                    <DiamondMinus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterDefense <= 1) return;
+                                            if (currentPoint >= TOTAL_POINT) return;
+                                            setCharacterDefense((prev) => prev - 1);
+                                            setCurrentPoint((prev) => prev + 1);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
+                                <div className="text-xl mb-4">Speed</div>
+                                <div className="flex flex-row gap-1 mb-6">
+                                    {Array(characterSpeed)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamondFill />
+                                            </span>
+                                        ))}
+                                    {Array(5 - characterSpeed)
+                                        .fill(0)
+                                        .map((_, index) => (
+                                            <span key={index}>
+                                                <BsDiamond />
+                                            </span>
+                                        ))}
+                                </div>
+                                <div className="flex flex-row gap-1">
+                                    <DiamondPlus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterSpeed >= 5) return;
+                                            if (currentPoint <= 0) return;
+                                            setCharacterSpeed((prev) => prev + 1);
+                                            setCurrentPoint((prev) => prev - 1);
+                                        }}
+                                    />
+                                    <DiamondMinus
+                                        className="hover:cursor-pointer"
+                                        onClick={() => {
+                                            if (characterSpeed <= 1) return;
+                                            if (currentPoint >= TOTAL_POINT) return;
+                                            setCharacterSpeed((prev) => prev - 1);
+                                            setCurrentPoint((prev) => prev + 1);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="mt-10 flex flex-col">
                             <Button
                                 type="submit"
                                 disabled={isLoading}
                                 className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
-                                {isLoading ? 'Loading' : 'Sign in'}
+                                {isLoading ? 'Loading' : 'Create'}
                             </Button>
-                            <div className="text-[#BDBDBD] text-sm text-center py-3">
-                                Do not have account?{' '}
-                                <Link
-                                    href={'/auth/signup'}
-                                    className="text-main-white hover:text-main-black transition ease-in-out">
-                                    Register
-                                </Link>
-                            </div>
                         </div>
                     </div>
                 </form>
             </Form>
-        </div>
-    );
-}
-
-export function SignUpForm() {
-    const [error, setError] = useState<string | undefined>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const router = useRouter();
-
-    const signInFormSchema = z.object({
-        username: z.string().min(1),
-        email: z.string().min(1),
-        password: z.string().min(1),
-        confirmation: z.string().min(1),
-    });
-
-    const form = useForm<z.infer<typeof signInFormSchema>>({
-        resolver: zodResolver(signInFormSchema),
-        defaultValues: {
-            username: '',
-            email: '',
-            password: '',
-            confirmation: '',
-        },
-    });
-
-    async function onSubmit(values: z.infer<typeof signInFormSchema>) {
-        setIsLoading(true);
-        try {
-            const result = await handleSignUp(values);
-            if (result.success) {
-                router.push('/auth/verify/signup');
-            }
-        } catch (error) {
-            setError('Sign up Error');
-            throw error;
-        }
-    }
-
-    return (
-        <div className={`grid grid-cols-[1fr_1.2fr_1fr] h-screen`}>
-            <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="py-10 px-20 w-full grid grid-rows-[1fr_3fr_1fr] h-full col-start-2 bg-bright-red">
-                    <FormLabel className="text-main-white text-4xl text-center self-center">Invitation</FormLabel>
-                    <div className="flex flex-col items-center justify-center w-full h-full">
-                        <div className="gap-3 flex flex-col w-full">
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <Input
-                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                                placeholder="Email"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <Input
-                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                                placeholder="Password"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="confirmation"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <Input
-                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                                placeholder="Write your password again"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className="flex flex-col w-[160px] self-end mt-9">
-                            <FormField
-                                control={form.control}
-                                name="username"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <Input
-                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                                placeholder="Write your username"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                    </div>
-                    <div className="flex flex-row justify-center items-center">
-                        <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
-                            {isLoading ? 'Loading' : 'Register'}
-                        </Button>
-                    </div>
-                </form>
-            </Form>
-        </div>
-    );
-}
-
-export function VerifySignUpForm() {
-    const [error, setError] = useState<string | undefined>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const router = useRouter();
-
-    const verifySignUpFormSchema = z.object({
-        code: z.string().min(1),
-    });
-
-    const form = useForm<z.infer<typeof verifySignUpFormSchema>>({
-        resolver: zodResolver(verifySignUpFormSchema),
-        defaultValues: {
-            code: '',
-        },
-    });
-
-    async function onSubmit(values: z.infer<typeof verifySignUpFormSchema>) {
-        setIsLoading(true);
-        try {
-            const result = await handleSignUp(values);
-            if (result.success) {
-                router.push('/auth/verify/signup');
-            }
-        } catch (error) {
-            setError('Sign up Error');
-            throw error;
-        }
-    }
-
-    return (
-        <div className={`grid grid-cols-[1fr_1.2fr_1fr] h-screen`}>
-            <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="py-10 px-20 w-full grid grid-rows-[1fr_3fr_1fr] h-full col-start-2 bg-bright-red">
-                    <FormLabel className="text-main-white text-4xl text-center self-center">Verification</FormLabel>
-                    <div className="flex flex-col items-center justify-center w-full h-full">
-                        <div className="gap-3 flex flex-col w-full">
-                            <FormField
-                                control={form.control}
-                                name="code"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <Input
-                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                                placeholder="Email"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                    </div>
-                    <div className="flex flex-row justify-center items-center">
-                        <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
-                            {isLoading ? 'Loading' : 'Verify'}
-                        </Button>
-                    </div>
-                </form>
-            </Form>
+            <div className="bg-middle-red h-full w-full p-10 flex flex-col cursor-default">
+                <div className="text-2xl mb-3">{characterClass} Class</div>
+                <div>This is description of each class.</div>
+            </div>
         </div>
     );
 }

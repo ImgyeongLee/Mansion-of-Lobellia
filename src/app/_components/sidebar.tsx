@@ -1,5 +1,6 @@
 'use client';
 
+import { handleSignOut } from '@/lib/actions/auth';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,38 +11,40 @@ export function Sidebar() {
         <nav className="bg-bright-red flex flex-col text-xl py-8">
             <div className="flex flex-col">
                 <Link
-                    href={'/dashboard'}
-                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out', {
-                        'bg-middle-red': path.includes('/dashboard'),
+                    href={'/dashboard/characters'}
+                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out hover:cursor-pointer', {
+                        'bg-middle-red': path.includes('/dashboard/characters'),
                     })}>
                     Characters
                 </Link>
                 <Link
-                    href={'/dungeons'}
-                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out', {
-                        'bg-middle-red': path.includes('/dungeons'),
+                    href={'/dashboard/dungeons'}
+                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out hover:cursor-pointer', {
+                        'bg-middle-red': path.includes('/dashboard/dungeons'),
                     })}>
                     Dungeons
                 </Link>
                 <Link
-                    href={'/store'}
-                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out', {
-                        'bg-middle-red': path.includes('/store'),
+                    href={'/dashboard/store'}
+                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out hover:cursor-pointer', {
+                        'bg-middle-red': path.includes('/dashboard/store'),
                     })}>
                     Store
                 </Link>
             </div>
             <div className="flex flex-col mt-6">
                 <Link
-                    href={'/account'}
-                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out', {
-                        'bg-middle-red': path.includes('/account'),
+                    href={'/dashboard/account'}
+                    className={cn('hover:bg-middle-red px-6 py-2 transition ease-in-out hover:cursor-pointer', {
+                        'bg-middle-red': path.includes('/dashboard/account'),
                     })}>
                     Account
                 </Link>
-                <Link href={'/dungeons'} className="hover:bg-middle-red px-6 py-2 transition ease-in-out">
+                <div
+                    className="hover:bg-middle-red px-6 py-2 transition ease-in-out hover:cursor-pointer"
+                    onClick={handleSignOut}>
                     Sign Out
-                </Link>
+                </div>
             </div>
         </nav>
     );

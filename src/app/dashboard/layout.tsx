@@ -1,4 +1,5 @@
 import { Sidebar } from '../_components/sidebar';
+
 export default function BaseLayout({
     children,
 }: Readonly<{

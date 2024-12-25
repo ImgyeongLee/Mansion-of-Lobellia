@@ -1,9 +1,9 @@
-import { SignUpForm } from '@/app/_components/forms';
+import { VerifySignUpForm } from '@/app/_components/auth-forms';
 
 export default function VerifySignUpPage() {
     return (
         <div>
-            <SignUpForm />
+            <VerifySignUpForm />
         </div>
     );
 }

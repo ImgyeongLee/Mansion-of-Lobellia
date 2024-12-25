@@ -1,5 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { authenticatedUser } from './lib/utils';
 
-export default function middleware(request) {
-    return NextResponse.next();
+export async function middleware(request: NextRequest) {
+    const response = NextResponse.next();
+    const user = await authenticatedUser({ request, response });
+
+    const isUserPage = request.nextUrl.pathname.startsWith('/dashboard');
+    const isAdminPage = request.nextUrl.pathname.startsWith('/admin');
+
+    if (isAdminPage) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/', request.url));
+        } else if (!user.isAdmin) {
+            return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+        return response;
+    }
+
+    if (isUserPage) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+        return response;
+    } else if (user) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
 }
+
+export const config = {
+    matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+};

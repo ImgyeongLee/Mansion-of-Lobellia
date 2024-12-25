@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { SignInForm } from './forms';
+import { SignInForm } from './auth-forms';
 
 export function SignInButton() {
     return (

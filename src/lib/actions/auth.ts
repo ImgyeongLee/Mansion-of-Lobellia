@@ -1,4 +1,13 @@
-import { resendSignUpCode, signIn, signOut, signUp } from 'aws-amplify/auth';
+import {
+    resendSignUpCode,
+    signIn,
+    signOut,
+    signUp,
+    confirmSignUp,
+    autoSignIn,
+    fetchUserAttributes,
+} from 'aws-amplify/auth';
+import { createUser } from './user';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function handleSignUp(data: any) {
@@ -25,6 +34,31 @@ export async function handleSignUp(data: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function handleConfirmSignUp(data: any) {
+    try {
+        const { nextStep } = await confirmSignUp({
+            username: data['email'],
+            confirmationCode: data['confirmationCode'],
+            options: {
+                autoSignIn: {
+                    enabled: true,
+                },
+            },
+        });
+        await autoSignIn();
+        const userAttributes = await fetchUserAttributes();
+        if (userAttributes.email && userAttributes.sub && userAttributes.name) {
+            await createUser(userAttributes.sub, userAttributes.email, userAttributes.name);
+        }
+
+        return { success: true, nextStep: nextStep.signUpStep };
+    } catch (error) {
+        console.log(error);
+        return { sucess: false, error: error };
+    }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function handleSignIn(data: any) {
     try {
         const { nextStep } = await signIn({
@@ -36,7 +70,6 @@ export async function handleSignIn(data: any) {
                 },
             },
         });
-
         if (nextStep.signInStep == 'CONFIRM_SIGN_UP') {
             await resendSignUpCode({
                 username: data['email'],
@@ -44,13 +77,13 @@ export async function handleSignIn(data: any) {
                     deliveryMethod: 'EMAIL',
                 },
             });
-            return { succes: true, nextStep: nextStep.signInStep };
+            return { success: true, nextStep: nextStep.signInStep };
         }
 
         return { success: true, nextStep: nextStep.signInStep };
     } catch (error) {
         console.log(error);
-        return { sucess: false, error: error };
+        return { success: false, error: error };
     }
 }
 
@@ -60,6 +93,6 @@ export async function handleSignOut() {
         return { success: true };
     } catch (error) {
         console.log(error);
-        return { sucess: false, error: error };
+        return { success: false, error: error };
     }
 }
