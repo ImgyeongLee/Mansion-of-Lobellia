@@ -93,8 +93,8 @@ model Entity {
   crit            Int
   speed           Int
   reward          Int
-  rowPos          Int
-  colPos          Int
+  rowPos          Int                  
+  colPos          Int                   
   isDead          Boolean               @default(false)
   isStun          Boolean               @default(false)
   isConfused      Boolean               @default(false)
@@ -108,18 +108,27 @@ model Entity {
 
 
 model Item {
-  id              String                @id @default(cuid())
-  characterId     String
-  monsterId       String
-  entityId        String
-  name            String
-  description     String?
-  sellPrice       Int
-  buyPrice        Int
-  isStoreItem     Boolean
-  character       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  monster         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
-  entity          Entity                @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  id                              String                @id @default(cuid())
+  characterId                     String
+  monsterId                       String
+  entityId                        String
+  name                            String
+  description                     String
+  sellPrice                       Int                   @default(0)
+  buyPrice                        Int                   @default(0)
+  isStoreItem                     Boolean
+  hpRecovery                      Int                   @default(0)
+  costRecovery                    Int                   @default(0)
+  speedBuff                       Int                   @default(0)
+  attackBuff                      Int                   @default(0)
+  defenseBuff                     Int                   @default(0)
+  critBuff                        Int                   @default(0)
+  dodgeBuff                       Int                   @default(0)
+  dotDamageCure                   Boolean               @default(false)
+  isConfusedCure                  Boolean               @default(false)
+  character                       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  monster                         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
+  entity                          Entity                @relation(fields: [entityId], references: [id], onDelete: Cascade)
 }
 
 
@@ -128,6 +137,7 @@ model Chat {
   roomId          String
   createdAt       DateTime              @default(now())
   sender          String
+  image           String
   chatType        ChatType
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
@@ -183,7 +193,7 @@ model Dungeon {
 
 model BattleRoom {
   id              String                @id @default(cuid())
-  name            String?
+  name            String
   round           Int
   numActions      Int
   roomStatus      RoomStatus
