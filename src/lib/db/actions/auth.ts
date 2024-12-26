@@ -8,6 +8,7 @@ import {
     fetchUserAttributes,
 } from 'aws-amplify/auth';
 import { createUser } from './user';
+import { storeUID } from './cookies';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function handleSignUp(data: any) {
@@ -20,9 +21,7 @@ export async function handleSignUp(data: any) {
                     email: data['email'],
                     name: data['username'],
                 },
-                autoSignIn: {
-                    enabled: true,
-                },
+                autoSignIn: true,
             },
         });
 
@@ -48,6 +47,7 @@ export async function handleConfirmSignUp(data: any) {
         await autoSignIn();
         const userAttributes = await fetchUserAttributes();
         if (userAttributes.email && userAttributes.sub && userAttributes.name) {
+            await storeUID(userAttributes.sub);
             await createUser(userAttributes.sub, userAttributes.email, userAttributes.name);
         }
 
@@ -61,16 +61,16 @@ export async function handleConfirmSignUp(data: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function handleSignIn(data: any) {
     try {
-        const { nextStep } = await signIn({
+        const { nextStep, isSignedIn } = await signIn({
             username: data['email'],
             password: data['password'],
             options: {
-                autoSignIn: {
-                    enabled: true,
-                },
+                authFlowType: 'USER_PASSWORD_AUTH',
             },
         });
-        if (nextStep.signInStep == 'CONFIRM_SIGN_UP') {
+
+        // If user needs to confirm signup
+        if (nextStep.signInStep === 'CONFIRM_SIGN_UP') {
             await resendSignUpCode({
                 username: data['email'],
                 options: {
@@ -80,9 +80,19 @@ export async function handleSignIn(data: any) {
             return { success: true, nextStep: nextStep.signInStep };
         }
 
-        return { success: true, nextStep: nextStep.signInStep };
+        // If user is successfully signed in
+        if (isSignedIn) {
+            const userAttributes = await fetchUserAttributes();
+            if (userAttributes.email && userAttributes.sub && userAttributes.name) {
+                await storeUID(userAttributes.sub);
+            }
+            return { success: true, nextStep: nextStep.signInStep };
+        }
+
+        // Handle other potential steps
+        return { success: false, nextStep: nextStep.signInStep };
     } catch (error) {
-        console.log(error);
+        console.log('Sign in error:', error);
         return { success: false, error: error };
     }
 }

@@ -8,6 +8,13 @@ export async function middleware(request: NextRequest) {
     const isUserPage = request.nextUrl.pathname.startsWith('/dashboard');
     const isAdminPage = request.nextUrl.pathname.startsWith('/admin');
 
+    if (request.nextUrl.pathname === '/') {
+        if (user) {
+            return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+        return response;
+    }
+
     if (isAdminPage) {
         if (!user) {
             return NextResponse.redirect(new URL('/', request.url));

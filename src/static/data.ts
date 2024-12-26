@@ -4,7 +4,7 @@ export const ATK_ARRAY = [10, 10, 13, 15, 18, 20];
 export const DEF_ARRAY = [5, 5, 7, 10, 12, 15];
 export const SPD_ARRAY = [5, 5, 7, 9, 10, 12];
 
-export const CLASS_DESCRIPTION = {
+export const CLASS_DESCRIPTION: Record<'Gladiolus' | 'Saintpaulia' | 'Cypress' | 'Blackthorn', string> = {
     Gladiolus:
         'The first to receive the Blessing of Gladiolus within the House of Lobelia was a knight who dedicated their life in unwavering service to the Empire. Those graced with this blessing possess extraordinary physical strength and an unwavering sense of self-worth, often driven by a deep-seated pursuit of thrill and enjoyment. They gain enhanced endurance and defense as a boon, but must bear penalties to their attack power and evasion.',
     Saintpaulia:

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { handleConfirmSignUp, handleSignIn, handleSignUp } from '@/lib/actions/auth';
+import { handleSignIn, handleConfirmSignUp, handleSignUp } from '@/lib/db/actions/auth';
 import { useUserStateStore } from '@/lib/store';
 
 export function SignInForm() {

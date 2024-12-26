@@ -16,14 +16,14 @@ model User {
   image           String?
   createdAt       DateTime              @default(now())
   isAdmin         Boolean               @default(false)
-  characters      Character[]
+  character       Character?
 }
 
 
 model Character {
   id                              String                @id @default(cuid())
   roomId                          String                @default("")
-  userId                          String
+  userId                          String                @unique
   name                            String
   class                           Class
   image                           String?               @default("")
@@ -139,6 +139,8 @@ model Item {
   monsters                        Monster[]
   entities                        Entity[]
   characterInventories            CharacterInventory[]
+
+  @@index([name(sort: Asc)])
 }
 
 
@@ -150,6 +152,8 @@ model Chat {
   image           String
   chatType        ChatType
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
 }
 
 
@@ -168,6 +172,8 @@ model CharacterSkill {
   requiredCost        Int
   requiredHp          Int
   character           Character[]
+
+  @@index([name(sort: Asc)])
 }
 
 
@@ -210,14 +216,15 @@ model Dungeon {
 
 model BattleRoom {
   id              String                @id @default(cuid())
+  invitationCode  String                @unique
   name            String
-  dungeonType     String
+  dungeonName     String
   description     String?
   minMember       Int
   maxMember       Int
   difficulty      Difficulty
-  round           Int
-  queue           String[]
+  round           Int                   @default(0)
+  queue           String[]              @default([])
   roomStatus      RoomStatus
   participants    Character[]
   entities        Entity[]

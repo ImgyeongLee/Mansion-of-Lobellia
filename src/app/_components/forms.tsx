@@ -17,27 +17,42 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import useAuthUser from '@/hooks/use-auth-user';
+import { useEffect, useState } from 'react';
 
-import { CLASS } from '@/static/data';
+import { CLASS, CLASS_DESCRIPTION } from '@/static/data';
 import { DiamondMinus, DiamondPlus } from 'lucide-react';
 import { BsDiamond, BsDiamondFill } from 'react-icons/bs';
 import { characterFormSchema } from '@/static/formSchema';
+import { CharacterClass, CharacterSkill } from '@/static/types';
+import { getSkillByClass } from '@/lib/db/actions/skills';
+import { useQuery } from '@tanstack/react-query';
+import { SkillCard } from './cards';
 
-export function CharacterCreationForm() {
-    const user = useAuthUser();
+export function CharacterCreationForm({ sub }: { sub: string }) {
     const [error, setError] = useState<string | undefined>('');
-    const [characterClass, setCharacterClass] = useState<string>('Gladiolus');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [characterClass, setCharacterClass] = useState<CharacterClass>('Gladiolus');
+    const [skills, setSkills] = useState<CharacterSkill[]>([]);
+    const [pending, setPending] = useState<boolean>(false);
     const [characterAttack, setCharacterAttack] = useState<number>(1);
     const [characterDefense, setCharacterDefense] = useState<number>(1);
     const [characterMaxHp, setCharacterMaxHp] = useState<number>(1);
     const [characterSpeed, setCharacterSpeed] = useState<number>(1);
     const [currentPoint, setCurrentPoint] = useState<number>(10);
     const TOTAL_POINT = 10;
-    const router = useRouter();
+
+    const { data: fetchedSkills, isLoading } = useQuery({
+        queryKey: ['skills', characterClass],
+        queryFn: async () => {
+            const data = await getSkillByClass(characterClass);
+            return data;
+        },
+    });
+
+    useEffect(() => {
+        if (fetchedSkills) {
+            setSkills(fetchedSkills);
+        }
+    }, [fetchedSkills]);
 
     const form = useForm<z.infer<typeof characterFormSchema>>({
         resolver: zodResolver(characterFormSchema),
@@ -53,12 +68,12 @@ export function CharacterCreationForm() {
     });
 
     async function onSubmit(values: z.infer<typeof characterFormSchema>) {
-        setIsLoading(true);
+        setPending(true);
         try {
         } catch (error) {
             console.log(error);
         }
-        setIsLoading(false);
+        setPending(false);
     }
 
     return (
@@ -120,7 +135,7 @@ export function CharacterCreationForm() {
                         <div className="text-sm mb-4">Available Additional Stat Points: {currentPoint}</div>
                         <div className="flex flex-row w-full items-center justify-center gap-2">
                             <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
-                                <div className="text-xl mb-4">Health</div>
+                                <div className="text-lg mb-4">Health</div>
                                 <div className="flex flex-row gap-1 mb-6">
                                     {Array(characterMaxHp)
                                         .fill(0)
@@ -159,7 +174,7 @@ export function CharacterCreationForm() {
                                 </div>
                             </div>
                             <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
-                                <div className="text-xl mb-4">Attack</div>
+                                <div className="text-lg mb-4">Attack</div>
                                 <div className="flex flex-row gap-1 mb-6">
                                     {Array(characterAttack)
                                         .fill(0)
@@ -198,7 +213,7 @@ export function CharacterCreationForm() {
                                 </div>
                             </div>
                             <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
-                                <div className="text-xl mb-4">Defense</div>
+                                <div className="text-lg mb-4">Defense</div>
                                 <div className="flex flex-row gap-1 mb-6">
                                     {Array(characterDefense)
                                         .fill(0)
@@ -237,7 +252,7 @@ export function CharacterCreationForm() {
                                 </div>
                             </div>
                             <div className="flex flex-col items-center bg-middle-red p-4 rounded-sm">
-                                <div className="text-xl mb-4">Speed</div>
+                                <div className="text-lg mb-4">Speed</div>
                                 <div className="flex flex-row gap-1 mb-6">
                                     {Array(characterSpeed)
                                         .fill(0)
@@ -276,13 +291,18 @@ export function CharacterCreationForm() {
                                 </div>
                             </div>
                         </div>
-
+                        <div className="my-5">✦ Select Skills</div>
+                        <div className="flex flex-row gap-1">
+                            {skills.map((skill) => {
+                                return <SkillCard key={skill.id} skill={skill} />;
+                            })}
+                        </div>
                         <div className="mt-10 flex flex-col">
                             <Button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={pending}
                                 className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
-                                {isLoading ? 'Loading' : 'Create'}
+                                {pending ? 'Loading' : 'Create'}
                             </Button>
                         </div>
                     </div>
@@ -290,7 +310,7 @@ export function CharacterCreationForm() {
             </Form>
             <div className="bg-middle-red h-full w-full p-10 flex flex-col cursor-default">
                 <div className="text-2xl mb-3">{characterClass} Class</div>
-                <div>This is description of each class.</div>
+                <div className="text-slate-400 text-sm">{CLASS_DESCRIPTION[characterClass]}</div>
             </div>
         </div>
     );

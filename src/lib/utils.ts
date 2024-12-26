@@ -1,4 +1,3 @@
-import { authConfig } from '@/app/amplify-cognito-config';
 import { ATK_ARRAY, DEF_ARRAY, HP_ARRAY, SPD_ARRAY } from '@/static/data';
 import { characterFormSchema } from '@/static/formSchema';
 import { NextServer, createServerRunner } from '@aws-amplify/adapter-nextjs';
@@ -13,7 +12,20 @@ export function cn(...inputs: ClassValue[]) {
 
 export const { runWithAmplifyServerContext } = createServerRunner({
     config: {
-        Auth: authConfig,
+        Auth: {
+            Cognito: {
+                userPoolId: process.env.NEXT_PUBLIC_USER_POOL_ID!,
+                userPoolClientId: process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID!,
+                loginWith: {
+                    email: true,
+                },
+                userAttributes: {
+                    email: {
+                        required: true,
+                    },
+                },
+            },
+        },
     },
 });
 
