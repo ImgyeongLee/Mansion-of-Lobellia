@@ -22,7 +22,7 @@ model User {
 
 model Character {
   id                              String                @id @default(cuid())
-  roomId                          String                @default("")
+  roomId                          String?               
   userId                          String                @unique
   name                            String
   class                           Class
@@ -56,10 +56,30 @@ model Character {
   dotDamageTurn                   Int                   @default(0)
   dotDamageAmount                 Int                   @default(0)
   createdAt                       DateTime              @default(now())
-  skills                          CharacterSkill[]
+  skills                          CharacterSkillRelation[]
   inventory                       CharacterInventory[]
-  battleRoom                      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  battleRoom                      BattleRoom?           @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user                            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model CharacterSkill {
+  id                  String                @id @default(cuid())
+  image               String?
+  name                String
+  description         String?
+  type                SkillType
+  range               SkillRange
+  isAllyTargeting     Boolean
+  isEnemyTargeting    Boolean        
+  isSelfTargeting     Boolean       
+  isEntire            Boolean
+  isUltimate          Boolean
+  requiredCost        Int
+  requiredHp          Int
+  characters          CharacterSkillRelation[]
+
+  @@index([name(sort: Asc)])
 }
 
 
@@ -72,6 +92,16 @@ model CharacterInventory {
   item                            Item                  @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@unique([characterId, itemId])
+}
+
+model CharacterSkillRelation {
+  id                              String                @id @default(cuid())
+  characterId                     String
+  skillId                         String
+  character                       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  skill                           CharacterSkill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, skillId]) // 하나의 캐릭터와 하나의 스킬만 연결
 }
 
 
@@ -154,26 +184,6 @@ model Chat {
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([createdAt(sort: Desc)])
-}
-
-
-model CharacterSkill {
-  id                  String                @id @default(cuid())
-  image               String?
-  name                String
-  description         String?
-  type                SkillType
-  range               SkillRange
-  isAllyTargeting     Boolean
-  isEnemyTargeting    Boolean        
-  isSelfTargeting     Boolean       
-  isEntire            Boolean
-  isUltimate          Boolean
-  requiredCost        Int
-  requiredHp          Int
-  character           Character[]
-
-  @@index([name(sort: Asc)])
 }
 
 

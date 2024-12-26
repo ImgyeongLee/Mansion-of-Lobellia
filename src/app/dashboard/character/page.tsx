@@ -3,8 +3,6 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { getCurrentUser } from 'aws-amplify/auth/server';
 import prisma from '@/lib/db/prisma';
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
 import { CharacterCreationForm } from '@/app/_components/forms';
 
 export default async function CharactersPage() {
@@ -43,13 +41,7 @@ export default async function CharactersPage() {
         <section className="grid grid-cols-[1fr_5fr_1fr] w-full h-full">
             <div className="col-start-2 flex flex-col h-full">
                 <div className="flex flex-row mt-16 mb-14 justify-between items-center">
-                    <div className="text-4xl">Character</div>
-                    <Link
-                        href={'characters/create'}
-                        className={`bg-bright-red text-main-white py-1 px-3 hover:bg-middle-red flex flex-row items-center justify-center rounded-sm trnasition ease-in-out`}>
-                        <Plus size={16} className="mr-1" />
-                        Create
-                    </Link>
+                    <div className="text-4xl">{character.name}</div>
                 </div>
                 <div className="grid grid-cols-3 items-center h-full -mt-10 mb-6"></div>
             </div>

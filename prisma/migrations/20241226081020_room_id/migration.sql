@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Character" ALTER COLUMN "roomId" DROP NOT NULL,
+ALTER COLUMN "roomId" DROP DEFAULT;

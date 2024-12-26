@@ -1,17 +1,29 @@
 import { characterFormSchema } from '@/static/formSchema';
 import { supabase } from '../supabase/client';
 import { z } from 'zod';
+import { CharacterCreationFormData } from '@/static/types';
+import prisma from '../prisma';
 
-export async function createCharacter(sub: string, formData: z.infer<typeof characterFormSchema>) {
+export async function createCharacter(formData: CharacterCreationFormData, userSkills: string[]) {
     try {
-        const { error } = await supabase
-            .from('Character')
-            .upsert([{ userId: sub, roomId: '', name: formData.name, class: formData.class }]);
-        if (error) {
-            throw error;
-        }
+        const newCharacter = await prisma.character.create({
+            data: {
+                ...formData,
+            },
+        });
+
+        await Promise.all(
+            userSkills.map(async (skill) => {
+                await prisma.characterSkillRelation.create({
+                    data: { characterId: newCharacter.id, skillId: skill },
+                });
+            })
+        );
+
+        return { success: true, character: newCharacter };
     } catch (error) {
-        console.error('Failed to upsert User:', error);
+        console.log(error);
+        return { success: false };
     }
 }
 

@@ -1,10 +1,8 @@
 import { ATK_ARRAY, DEF_ARRAY, HP_ARRAY, SPD_ARRAY } from '@/static/data';
-import { characterFormSchema } from '@/static/formSchema';
 import { NextServer, createServerRunner } from '@aws-amplify/adapter-nextjs';
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth/server';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { z } from 'zod';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -49,49 +47,63 @@ export async function authenticatedUser(context: NextServer.Context) {
     });
 }
 
-export function calculateStatsByClass(data: z.infer<typeof characterFormSchema>) {
-    if (data.class === 'Gladiolus') {
+export function calculateStatsByClass(
+    attack: number,
+    defense: number,
+    speed: number,
+    maxHp: number,
+    characterClass: string
+) {
+    if (characterClass === 'Gladiolus') {
         const stats = {
-            maxHp: Math.round(HP_ARRAY[data.maxHp] * 1.5),
-            attack: ATK_ARRAY[data.attack],
-            defense: DEF_ARRAY[data.defense] * 2,
+            maxHp: Math.round(HP_ARRAY[maxHp] * 1.5),
+            currentHp: Math.round(HP_ARRAY[maxHp] * 1.5),
+            attack: ATK_ARRAY[attack],
+            defense: DEF_ARRAY[defense] * 2,
             maxCost: 30,
+            currentCost: 30,
             crit: 20,
             dodge: 5,
-            speed: SPD_ARRAY[data.speed],
+            speed: SPD_ARRAY[speed],
         };
         return stats;
-    } else if (data.class === 'Saintpaulia') {
+    } else if (characterClass === 'Saintpaulia') {
         const stats = {
-            maxHp: Math.round(HP_ARRAY[data.maxHp] * 1.5),
-            attack: Math.round(ATK_ARRAY[data.attack] * 0.7),
-            defense: DEF_ARRAY[data.defense],
+            maxHp: Math.round(HP_ARRAY[maxHp] * 1.5),
+            currentHp: Math.round(HP_ARRAY[maxHp] * 1.5),
+            attack: Math.round(ATK_ARRAY[attack] * 0.7),
+            defense: DEF_ARRAY[defense],
             maxCost: 60,
+            currentCost: 60,
             crit: 5,
             dodge: 20,
-            speed: SPD_ARRAY[data.speed],
+            speed: SPD_ARRAY[speed],
         };
         return stats;
-    } else if (data.class === 'Cypress') {
+    } else if (characterClass === 'Cypress') {
         const stats = {
-            maxHp: Math.round(HP_ARRAY[data.maxHp] * 0.7),
-            attack: Math.round(ATK_ARRAY[data.attack] * 1.5),
-            defense: DEF_ARRAY[data.defense],
+            maxHp: Math.round(HP_ARRAY[maxHp] * 0.7),
+            currentHp: Math.round(HP_ARRAY[maxHp] * 0.7),
+            attack: Math.round(ATK_ARRAY[attack] * 1.5),
+            defense: DEF_ARRAY[defense],
             maxCost: 20,
+            currentCost: 20,
             crit: 35,
             dodge: 20,
-            speed: SPD_ARRAY[data.speed],
+            speed: SPD_ARRAY[speed],
         };
         return stats;
-    } else if (data.class === 'Blackthorn') {
+    } else if (characterClass === 'Blackthorn') {
         const stats = {
-            maxHp: HP_ARRAY[data.maxHp],
-            attack: ATK_ARRAY[data.attack],
-            defense: Math.round(DEF_ARRAY[data.defense] * 0.7),
+            maxHp: HP_ARRAY[maxHp],
+            currentHp: HP_ARRAY[maxHp],
+            attack: ATK_ARRAY[attack],
+            defense: Math.round(DEF_ARRAY[defense] * 0.7),
             maxCost: 60,
+            currentCost: 60,
             crit: 5,
             dodge: 40,
-            speed: SPD_ARRAY[data.speed],
+            speed: SPD_ARRAY[speed],
         };
         return stats;
     }

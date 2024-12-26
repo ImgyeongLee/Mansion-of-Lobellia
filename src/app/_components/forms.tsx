@@ -27,21 +27,26 @@ import { CharacterClass, CharacterSkill } from '@/static/types';
 import { getSkillByClass } from '@/lib/db/actions/skills';
 import { useQuery } from '@tanstack/react-query';
 import { SkillCard } from './cards';
+import { calculateStatsByClass } from '@/lib/utils';
+import { ubuntu } from '@/static/fonts';
+import { useRouter } from 'next/navigation';
 
 export function CharacterCreationForm({ sub }: { sub: string }) {
     const [error, setError] = useState<string | undefined>('');
     const [characterClass, setCharacterClass] = useState<CharacterClass>('Gladiolus');
     const [skills, setSkills] = useState<CharacterSkill[]>([]);
+    const [userSkills, setUserSkills] = useState<string[]>([]);
     const [pending, setPending] = useState<boolean>(false);
     const [characterAttack, setCharacterAttack] = useState<number>(1);
     const [characterDefense, setCharacterDefense] = useState<number>(1);
     const [characterMaxHp, setCharacterMaxHp] = useState<number>(1);
     const [characterSpeed, setCharacterSpeed] = useState<number>(1);
     const [currentPoint, setCurrentPoint] = useState<number>(10);
+    const router = useRouter();
     const TOTAL_POINT = 10;
 
     const { data: fetchedSkills, isLoading } = useQuery({
-        queryKey: ['skills', characterClass],
+        queryKey: [characterClass],
         queryFn: async () => {
             const data = await getSkillByClass(characterClass);
             return data;
@@ -59,21 +64,65 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
         defaultValues: {
             name: '',
             class: 'Gladiolus',
-            skills: [],
-            attack: 1,
-            defense: 1,
-            maxHp: 1,
-            speed: 1,
         },
     });
 
-    async function onSubmit(values: z.infer<typeof characterFormSchema>) {
-        setPending(true);
-        try {
-        } catch (error) {
-            console.log(error);
+    const handleSkillClick = (id: string) => {
+        if (userSkills.length >= 3 && !userSkills.includes(id)) return;
+        if (userSkills.includes(id)) {
+            setUserSkills(userSkills.filter((skillId) => skillId !== id));
+        } else {
+            setUserSkills([...userSkills, id]);
         }
-        setPending(false);
+    };
+
+    async function onSubmit(values: z.infer<typeof characterFormSchema>) {
+        if (userSkills.length != 3) {
+            setError('You need to select 3 skills.');
+            return;
+        }
+
+        setPending(true);
+        const processedValues = calculateStatsByClass(
+            characterAttack,
+            characterDefense,
+            characterSpeed,
+            characterMaxHp,
+            characterClass
+        );
+
+        if (!processedValues) return;
+
+        try {
+            const response = await fetch('/api/createCharacter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    formData: {
+                        ...values,
+                        ...processedValues,
+                        userId: sub,
+                        image: '',
+                    },
+                    userSkills,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                router.refresh();
+            } else {
+                console.error('Failed to create character:', data.message);
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            setError('Failed to create character');
+        } finally {
+            setPending(false);
+        }
     }
 
     return (
@@ -108,7 +157,7 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
                                             <Select
                                                 onValueChange={(value) => {
                                                     field.onChange(value);
-                                                    setCharacterClass(value);
+                                                    setCharacterClass(value as CharacterClass);
                                                 }}
                                                 defaultValue={field.value}>
                                                 <SelectTrigger className="w-full ring-0 shadow-none drop-shadow-none rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus:ring-0">
@@ -294,9 +343,19 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
                         <div className="my-5">✦ Select Skills</div>
                         <div className="flex flex-row gap-1">
                             {skills.map((skill) => {
-                                return <SkillCard key={skill.id} skill={skill} />;
+                                return (
+                                    <SkillCard
+                                        key={skill.id}
+                                        skill={skill}
+                                        isHighLight={userSkills.includes(skill.id)}
+                                        onClick={() => {
+                                            handleSkillClick(skill.id);
+                                        }}
+                                    />
+                                );
                             })}
                         </div>
+                        <div className={`${ubuntu.className} text-center mt-3 text-sm`}>{error}</div>
                         <div className="mt-10 flex flex-col">
                             <Button
                                 type="submit"
