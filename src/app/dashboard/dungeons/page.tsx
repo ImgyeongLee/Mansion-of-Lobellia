@@ -1,3 +1,4 @@
+import { DungeonCard } from '@/app/_components/cards';
 import prisma from '@/lib/db/prisma';
 
 export default async function DungeonPage() {
@@ -9,9 +10,10 @@ export default async function DungeonPage() {
                 <div className="flex flex-row mt-16 mb-14 justify-between items-center">
                     <div className="text-4xl">Dungeons</div>
                 </div>
-                <div className="grid grid-cols-3 items-center h-full -mt-10 mb-6">
+                <div className="grid grid-rows-3 items-center h-full -mt-10 mb-6">
                     {dungeons.length === 0 && <div className="col-span-3 text-center -mt-6">No dungeons found</div>}
-                    {dungeons.length > 0 && dungeons.map((dungeon) => <div key={dungeon.id}>{dungeon.name}</div>)}
+                    {dungeons.length > 0 &&
+                        dungeons.map((dungeon) => <DungeonCard key={dungeon.id} dungeon={dungeon} />)}
                 </div>
             </div>
         </section>

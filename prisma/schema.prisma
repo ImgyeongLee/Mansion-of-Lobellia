@@ -25,6 +25,7 @@ model Character {
   roomId                          String?               
   userId                          String                @unique
   name                            String
+  description                     String?
   class                           Class
   image                           String?               @default("")
   maxHp                           Int
@@ -101,7 +102,7 @@ model CharacterSkillRelation {
   character                       Character             @relation(fields: [characterId], references: [id], onDelete: Cascade)
   skill                           CharacterSkill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
-  @@unique([characterId, skillId]) // 하나의 캐릭터와 하나의 스킬만 연결
+  @@unique([characterId, skillId])
 }
 
 
@@ -116,9 +117,9 @@ model Monster {
   crit            Int
   speed           Int
   reward          Int
-  skills          MonsterSkill[]
-  items           Item[]
-  dungeon         Dungeon[]
+  dungeons        MonsterDungeonRelation[]
+  skills          MonsterSkillRelation[]
+  items           MonsterInventory[]
 }
 
 
@@ -143,8 +144,8 @@ model Entity {
   buffedTurn      Int                   @default(0)
   dotDamageTurn   Int                   @default(0)
   dotDamageAmount Int                   @default(0)
-  skills          MonsterSkill[]
-  items           Item[]
+  skills          EntitySkillRelation[]
+  items           EntityInventory[]
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
 
@@ -166,9 +167,9 @@ model Item {
   dodgeBuff                       Int                   @default(0)
   dotDamageCure                   Boolean               @default(false)
   isConfusedCure                  Boolean               @default(false)
-  monsters                        Monster[]
-  entities                        Entity[]
   characterInventories            CharacterInventory[]
+  MonsterInventories              MonsterInventory[]
+  EntityInventories               EntityInventory[]
 
   @@index([name(sort: Asc)])
 }
@@ -206,22 +207,73 @@ model MonsterSkill {
   range           SkillRange
   isSelfTargeting Boolean
   isEntire        Boolean
-  monster         Monster[]
-  entities        Entity[]
+  entities        EntitySkillRelation[]
+  monsters        MonsterSkillRelation[]
 }
 
 
 model Dungeon {
   id              String                @id @default(cuid())
+  image           String?
   name            String
   size            Int                 
   description     String?
   difficulty      Difficulty
   minMember       Int
   maxMember       Int
-  monsters        Monster[]
+  monsters        MonsterDungeonRelation[]
 }
 
+model MonsterDungeonRelation {
+  id                              String                @id @default(cuid())
+  monsterId                       String
+  dungeonId                       String
+  monster                         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
+  dungeon                         Dungeon               @relation(fields: [dungeonId], references: [id], onDelete: Cascade)
+
+  @@unique([monsterId, dungeonId])
+}
+
+model MonsterSkillRelation {
+  id                              String                @id @default(cuid())
+  monsterId                       String
+  skillId                         String
+  monster                         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
+  skill                           MonsterSkill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([monsterId, skillId])
+}
+
+model MonsterInventory {
+  id                              String                @id @default(cuid())
+  monsterId                       String
+  itemId                          String
+  monster                         Monster               @relation(fields: [monsterId], references: [id], onDelete: Cascade)
+  item                            Item                  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([monsterId, itemId])
+}
+
+
+model EntitySkillRelation {
+  id                              String                @id @default(cuid())
+  entityId                        String
+  skillId                         String
+  entity                          Entity                @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  skill                           MonsterSkill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([entityId, skillId])
+}
+
+model EntityInventory {
+  id                              String                @id @default(cuid())
+  entityId                        String
+  itemId                          String
+  entity                          Entity                @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  item                            Item                  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([entityId, itemId])
+}
 
 
 model BattleRoom {

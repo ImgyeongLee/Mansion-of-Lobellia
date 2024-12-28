@@ -23,7 +23,7 @@ import { CLASS, CLASS_DESCRIPTION } from '@/static/data';
 import { DiamondMinus, DiamondPlus } from 'lucide-react';
 import { BsDiamond, BsDiamondFill } from 'react-icons/bs';
 import { characterFormSchema } from '@/static/formSchema';
-import { CharacterClass, CharacterSkill } from '@/static/types';
+import { CharacterClass, CharacterSkill } from '@/static/types/character';
 import { getSkillByClass } from '@/lib/db/actions/skills';
 import { useQuery } from '@tanstack/react-query';
 import { SkillCard } from './cards';
@@ -94,7 +94,7 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
         if (!processedValues) return;
 
         try {
-            const response = await fetch('/api/createCharacter', {
+            const response = await fetch('/api/character/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

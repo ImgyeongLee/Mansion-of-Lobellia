@@ -1,7 +1,4 @@
-import { characterFormSchema } from '@/static/formSchema';
-import { supabase } from '../supabase/client';
-import { z } from 'zod';
-import { CharacterCreationFormData } from '@/static/types';
+import { CharacterCreationFormData, CharacterUpdateFormData } from '@/static/types/character';
 import prisma from '../prisma';
 
 export async function createCharacter(formData: CharacterCreationFormData, userSkills: string[]) {
@@ -27,28 +24,35 @@ export async function createCharacter(formData: CharacterCreationFormData, userS
     }
 }
 
-export async function updateCharacter(sub: string, characterId: string, formData: z.infer<typeof characterFormSchema>) {
+export async function deleteCharacter(characterId: string) {
     try {
-        const { error } = await supabase
-            .from('Character')
-            .update({ name: formData.name, class: formData.class })
-            .eq('userId', sub)
-            .eq('id', characterId);
-        if (error) {
-            throw error;
-        }
+        await prisma.character.delete({
+            where: {
+                id: characterId,
+            },
+        });
+
+        return { success: true };
     } catch (error) {
-        console.error('Failed to update Character:', error);
+        console.log(error);
+        return { success: false };
     }
 }
 
-export async function deleteCharacter(sub: string, characterId: string) {
+export async function updateCharacter(characterId: string, formData: CharacterUpdateFormData) {
     try {
-        const { error } = await supabase.from('Character').delete().eq('userId', sub).eq('id', characterId);
-        if (error) {
-            throw error;
-        }
+        const updatedCharacter = await prisma.character.update({
+            where: {
+                id: characterId,
+            },
+            data: {
+                ...formData,
+            },
+        });
+
+        return { success: true, character: updatedCharacter };
     } catch (error) {
-        console.error('Failed to delete Character:', error);
+        console.log(error);
+        return { success: false };
     }
 }
