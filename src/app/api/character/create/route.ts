@@ -1,4 +1,5 @@
 import { createCharacter } from '@/lib/db/actions/characters';
+import { setCharacterId } from '@/lib/db/actions/cookies';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -8,6 +9,7 @@ export async function POST(req: NextRequest) {
         const result = await createCharacter(formData, userSkills);
 
         if (result.success) {
+            if (result.character) await setCharacterId(result.character.id);
             return NextResponse.json({ message: 'Character created successfully!', character: result.character });
         } else {
             return NextResponse.json({ message: 'Character creation failed.' }, { status: 500 });

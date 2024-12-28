@@ -5,18 +5,21 @@ import { getCurrentUser } from 'aws-amplify/auth/server';
 import prisma from '@/lib/db/prisma';
 import { CharacterCreationForm } from '@/app/_components/forms';
 import { CharacterDetailSection } from '@/app/_components/sections';
+import { getSub } from '@/lib/db/actions/cookies';
 
 export default async function CharactersPage() {
-    let currentUserSub: string | undefined = undefined;
+    let currentUserSub = await getSub();
 
-    const currentUser = await runWithAmplifyServerContext({
-        nextServerContext: { cookies },
-        operation: (contextSpec) => getCurrentUser(contextSpec),
-    });
-    currentUserSub = currentUser?.userId;
+    if (!currentUserSub) {
+        const currentUser = await runWithAmplifyServerContext({
+            nextServerContext: { cookies },
+            operation: (contextSpec) => getCurrentUser(contextSpec),
+        });
+        currentUserSub = currentUser?.userId;
 
-    if (currentUserSub === undefined) {
-        redirect('/');
+        if (currentUserSub === undefined) {
+            redirect('/');
+        }
     }
 
     const character = await prisma.character.findFirst({

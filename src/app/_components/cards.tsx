@@ -4,10 +4,8 @@ import { ubuntu } from '@/static/fonts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -17,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { Dungeon } from '@/static/types/dungeon';
 import { Monster } from '@/static/types/monster';
 import { useEffect, useState } from 'react';
+import { Item } from '@prisma/client';
 
 interface SkillCardProps {
     skill: CharacterSkill;
@@ -76,22 +75,36 @@ export function DungeonCard({ dungeon }: DungeonCardProps) {
                     <DialogTitle className="text-3xl">{dungeon.name}</DialogTitle>
                     <DialogDescription className="text-base">{dungeon.description}</DialogDescription>
                 </DialogHeader>
-                <div>Featured Monsters</div>
-                <MonsterList dungeonId={dungeon.id} />
-                <DialogFooter>
-                    <DialogClose>Close</DialogClose>
-                </DialogFooter>
+                <div className="grid grid-cols-2">
+                    <div>
+                        <div className="mb-2">Featured Monsters</div>
+                        <MonsterList dungeonId={dungeon.id} />
+                    </div>
+                    <div className="flex flex-col">
+                        <div>
+                            Difficulty: <span className={`${ubuntu.className}`}>{dungeon.difficulty}</span>
+                        </div>
+                        <div>
+                            Recommended Party Size:{' '}
+                            <span className={`${ubuntu.className}`}>
+                                {dungeon.minMember} - {dungeon.maxMember}
+                            </span>
+                        </div>
+                        <div>
+                            Size: <span className={`${ubuntu.className}`}>{dungeon.size}</span>
+                        </div>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     );
 }
 
-interface MonsterCardProps {
+interface MonsterListProps {
     dungeonId: string;
-    monster?: Monster;
 }
 
-export function MonsterList({ dungeonId }: MonsterCardProps) {
+export function MonsterList({ dungeonId }: MonsterListProps) {
     const [monsters, setMonsters] = useState<Monster[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -120,12 +133,74 @@ export function MonsterList({ dungeonId }: MonsterCardProps) {
     }
 
     return (
-        <div className="flex flex-row">
+        <div className="flex flex-row gap-2">
             {monsters.map((monster) => (
-                <div key={monster.id} className="">
-                    {monster.name}
-                </div>
+                <MonsterCard key={monster.id} monster={monster} />
             ))}
         </div>
+    );
+}
+
+interface MonsterCardProps {
+    monster: Monster;
+}
+
+function MonsterCard({ monster }: MonsterCardProps) {
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger>
+                    <div className="bg-wine-red p-2 w-[50px] h-[50px] rounded-sm text-center flex flex-col justify-center hover:scale-105 ease-in-out trnasition"></div>
+                </TooltipTrigger>
+                <TooltipContent className={cn('bg-black w-[150px] flex flex-col text-center')}>
+                    <div className="text-center text-base leading-tight">{monster.name}</div>
+                    <div className={`${ubuntu.className} mb-2`}>{monster.description}</div>
+                    <div className={`${ubuntu.className}`}>HP {monster.maxHp}</div>
+                    <div className={`${ubuntu.className}`}>
+                        ATK {monster.attack} DEF {monster.defense} SPD {monster.speed}
+                    </div>
+                    <div className={`${ubuntu.className}`}>
+                        DODGE {monster.dodge} CRIT {monster.crit}%
+                    </div>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+}
+
+interface ItemListProps {
+    items: Item[];
+}
+
+export function ItemList({ items }: ItemListProps) {
+    return (
+        <div className="flex flex-row gap-3">
+            {items.map((item) => (
+                <ItemCard key={item.id} item={item} />
+            ))}
+        </div>
+    );
+}
+
+interface ItemCardProps {
+    item: Item;
+}
+
+export function ItemCard({ item }: ItemCardProps) {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <div className="cursor-pointer w-[64px] h-[64px] rounded-sm bg-black hover:scale-105 transition ease-in-out">
+                    <div className=""></div>
+                </div>
+            </DialogTrigger>
+            <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[800px] min-w-[400px]">
+                <DialogHeader>
+                    <DialogTitle className="text-3xl">{item.name}</DialogTitle>
+                    <DialogDescription className="text-base">Price: {item.buyPrice}G</DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col">{item.description}</div>
+            </DialogContent>
+        </Dialog>
     );
 }

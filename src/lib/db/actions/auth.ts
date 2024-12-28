@@ -8,7 +8,7 @@ import {
     fetchUserAttributes,
 } from 'aws-amplify/auth';
 import { createUser } from './user';
-import { storeUID } from './cookies';
+import { removeCharacterId, removeSub, setSub } from './cookies';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function handleSignUp(data: any) {
@@ -47,8 +47,8 @@ export async function handleConfirmSignUp(data: any) {
         await autoSignIn();
         const userAttributes = await fetchUserAttributes();
         if (userAttributes.email && userAttributes.sub && userAttributes.name) {
-            await storeUID(userAttributes.sub);
             await createUser(userAttributes.sub, userAttributes.email, userAttributes.name);
+            setSub(userAttributes.sub);
         }
 
         return { success: true, nextStep: nextStep.signUpStep };
@@ -84,7 +84,7 @@ export async function handleSignIn(data: any) {
         if (isSignedIn) {
             const userAttributes = await fetchUserAttributes();
             if (userAttributes.email && userAttributes.sub && userAttributes.name) {
-                await storeUID(userAttributes.sub);
+                setSub(userAttributes.sub);
             }
             return { success: true, nextStep: nextStep.signInStep };
         }
@@ -100,6 +100,8 @@ export async function handleSignIn(data: any) {
 export async function handleSignOut() {
     try {
         await signOut();
+        removeSub();
+        removeCharacterId();
         return { success: true };
     } catch (error) {
         console.log(error);
