@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getCurrentUser } from 'aws-amplify/auth/server';
 import prisma from '@/lib/db/prisma';
 import { getCharacterId, getSub } from '@/lib/db/actions/cookies';
-import { StoreItemCard } from './storeItem';
+import { CharacterInventory, StoreItemCard, StoreSection } from './storeCards';
 
 export default async function StorePage() {
     let currentCharacterId = await getCharacterId();
@@ -47,27 +47,7 @@ export default async function StorePage() {
                 <div className="flex flex-row mt-16 mb-14 justify-between items-center">
                     <div className="text-4xl">Store</div>
                 </div>
-                <div className="grid grid-rows-2 gap-2 items-center h-full -mt-10 mb-6">
-                    <div className="h-full grid grid-cols-2">
-                        <div className="bg-bright-red h-full p-5">
-                            <div className="bg-middle-red h-full p-3">
-                                <div className="flex flex-row gap-2">
-                                    {Storeitems.length > 0 &&
-                                        Storeitems.map((item) => (
-                                            <StoreItemCard
-                                                key={item.id}
-                                                item={item}
-                                                characterId={currentCharacterId || ''}></StoreItemCard>
-                                        ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-amber-800 h-full"></div>
-                    </div>
-                    <div className="bg-wine-red p-5 h-full rounded-md">
-                        <div className="bg-middle-red p-2 h-full"></div>
-                    </div>
-                </div>
+                <StoreSection storeItems={Storeitems} characterId={currentCharacterId as string} />
             </div>
         </section>
     );

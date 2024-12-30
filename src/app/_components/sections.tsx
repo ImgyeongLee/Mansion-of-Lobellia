@@ -103,7 +103,12 @@ export function CharacterDetailSection({ character }: CharacterDetailSectionProp
                             </div>
                             <div className="my-2 text-center">✦ ✦</div>
                             <CharacterSkillList characterId={character.id} />
-                            <div className="text-xl mt-2">Inventory</div>
+                            <div className="text-xl mt-2 mb-1">
+                                Inventory{' '}
+                                <span className={`${ubuntu.className} text-sm`}>
+                                    &#40;Gold: {character.money}G&#41;
+                                </span>
+                            </div>
                             <CharacterInventory characterId={character.id} />
                             <div className="my-2 text-center">✦ ✦ ✦</div>
                             <div className="text-xl mt-2">Background Story</div>

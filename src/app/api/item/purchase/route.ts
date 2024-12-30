@@ -1,5 +1,6 @@
 import { addItemToInventory, decreaseMoney } from '@/lib/db/actions/inventory';
 import { NextRequest, NextResponse } from 'next/server';
+export const fetchCache = 'force-no-store';
 
 export async function POST(req: NextRequest) {
     try {
