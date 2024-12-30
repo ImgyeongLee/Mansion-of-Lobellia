@@ -14,19 +14,21 @@ import { CharacterSkill } from '@/static/types/character';
 import { cn } from '@/lib/utils';
 import { Dungeon } from '@/static/types/dungeon';
 import { Monster } from '@/static/types/monster';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Item } from '@prisma/client';
 
 interface SkillCardProps {
     skill: CharacterSkill;
-    isHighLight: boolean;
-    onClick: () => void;
+    isDisplay?: boolean;
+    isHighLight?: boolean;
+    onClick?: () => void;
 }
 
-export function SkillCard({ skill, isHighLight, onClick }: SkillCardProps) {
+export function SkillCard({ skill, isDisplay, isHighLight, onClick }: SkillCardProps) {
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!onClick) return;
         onClick();
     };
     return (
@@ -40,6 +42,7 @@ export function SkillCard({ skill, isHighLight, onClick }: SkillCardProps) {
                             {
                                 'border-white border-2': isHighLight,
                                 'border-none': !isHighLight,
+                                'bg-black': isDisplay,
                             }
                         )}></div>
                 </TooltipTrigger>
@@ -168,39 +171,105 @@ function MonsterCard({ monster }: MonsterCardProps) {
     );
 }
 
-interface ItemListProps {
-    items: Item[];
+interface ItemCardProps {
+    item: Item;
+    children?: React.ReactNode;
 }
 
-export function ItemList({ items }: ItemListProps) {
+export function ItemCard({ item, children }: ItemCardProps) {
     return (
-        <div className="flex flex-row gap-3">
+        <Dialog>
+            <DialogTrigger asChild>
+                <div className="cursor-pointer w-[50px] h-[50px] rounded-sm bg-black hover:scale-105 transition ease-in-out">
+                    <div className=""></div>
+                </div>
+            </DialogTrigger>
+            <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[400px] min-w-[320px]">
+                <div className="flex flex-col justify-center w-full items-center">
+                    <div className="bg-slate-700 w-[100px] h-[100px] mb-4"></div>
+                    <div className="text-lg">{item.name}</div>
+                    <div className={`${ubuntu.className} text-sm`}>{item.description}</div>
+                    {children}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function CharacterInventory({ characterId }: { characterId: string }) {
+    const [items, setItems] = useState<{ item: Item; amount: number }[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchItems = async () => {
+            try {
+                const response = await fetch(`/api/character/${characterId}/items`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setItems(data.data);
+                } else {
+                    console.error('Failed to fetch monsters:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Failed to fetch monsters:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchItems();
+    }, [characterId]);
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (items.length == 0) {
+        return <div>No items</div>;
+    }
+
+    return (
+        <div className="flex flex-row gap-2">
             {items.map((item) => (
-                <ItemCard key={item.id} item={item} />
+                <ItemCard key={item.item.id} item={item.item} />
             ))}
         </div>
     );
 }
 
-interface ItemCardProps {
-    item: Item;
-}
+export function CharacterSkillList({ characterId }: { characterId: string }) {
+    const [skills, setSkills] = useState<CharacterSkill[]>([]);
+    const [loading, setLoading] = useState(true);
 
-export function ItemCard({ item }: ItemCardProps) {
+    useEffect(() => {
+        const fetchItems = async () => {
+            try {
+                const response = await fetch(`/api/character/${characterId}/skills`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setSkills(data.data);
+                } else {
+                    console.error('Failed to fetch monsters:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Failed to fetch monsters:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchItems();
+    }, [characterId]);
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <div className="cursor-pointer w-[64px] h-[64px] rounded-sm bg-black hover:scale-105 transition ease-in-out">
-                    <div className=""></div>
-                </div>
-            </DialogTrigger>
-            <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[800px] min-w-[400px]">
-                <DialogHeader>
-                    <DialogTitle className="text-3xl">{item.name}</DialogTitle>
-                    <DialogDescription className="text-base">Price: {item.buyPrice}G</DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col">{item.description}</div>
-            </DialogContent>
-        </Dialog>
+        <div className="flex flex-row gap-2 w-full justify-center">
+            {skills.map((skill) => (
+                <SkillCard key={skill.id} skill={skill} isDisplay={true} />
+            ))}
+        </div>
     );
 }
