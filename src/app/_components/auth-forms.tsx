@@ -273,7 +273,7 @@ export function VerifySignUpForm() {
             const result = await handleConfirmSignUp({ ...values, email: email });
             if (result.success) {
                 handlEmail('');
-                router.refresh();
+                //router.refresh();
             }
         } catch (error) {
             setError('Sign up confirmation Error');

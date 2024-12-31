@@ -47,8 +47,12 @@ export async function handleConfirmSignUp(data: any) {
         await autoSignIn();
         const userAttributes = await fetchUserAttributes();
         if (userAttributes.email && userAttributes.sub && userAttributes.name) {
-            await createUser(userAttributes.sub, userAttributes.email, userAttributes.name);
-            setSub(userAttributes.sub);
+            try {
+                await createUser(userAttributes.sub, userAttributes.email, userAttributes.name);
+                setSub(userAttributes.sub);
+            } catch (error) {
+                console.error('Failed to create new user: ', error);
+            }
         }
 
         return { success: true, nextStep: nextStep.signUpStep };

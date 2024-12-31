@@ -103,7 +103,7 @@ export function StoreUserItemCard({ item, characterId }: StoreItemCardProps) {
 export function CharacterInventory({ characterId }: { characterId: string }) {
     const [items, setItems] = useState<{ item: Item; amount: number }[]>([]);
 
-    const { data: fetchedItems, isLoading } = useQuery({
+    const { data: fetchedItems } = useQuery({
         queryKey: [characterId],
         queryFn: async () => {
             const data = await getCharacterInventory(characterId);

@@ -224,6 +224,7 @@ model Dungeon {
   monsters        MonsterDungeonRelation[]
 }
 
+
 model MonsterDungeonRelation {
   id                              String                @id @default(cuid())
   monsterId                       String
@@ -234,6 +235,7 @@ model MonsterDungeonRelation {
   @@unique([monsterId, dungeonId])
 }
 
+
 model MonsterSkillRelation {
   id                              String                @id @default(cuid())
   monsterId                       String
@@ -243,6 +245,7 @@ model MonsterSkillRelation {
 
   @@unique([monsterId, skillId])
 }
+
 
 model MonsterInventory {
   id                              String                @id @default(cuid())
@@ -265,6 +268,7 @@ model EntitySkillRelation {
   @@unique([entityId, skillId])
 }
 
+
 model EntityInventory {
   id                              String                @id @default(cuid())
   entityId                        String
@@ -279,19 +283,29 @@ model EntityInventory {
 model BattleRoom {
   id              String                @id @default(cuid())
   invitationCode  String                @unique
-  name            String
-  dungeonName     String
+  roomName        String
+  dungeonType     String
+  size            Int
   description     String?
   minMember       Int
   maxMember       Int
   difficulty      Difficulty
   round           Int                   @default(0)
-  queue           String[]              @default([])
   roomStatus      RoomStatus
   participants    Character[]
   entities        Entity[]
   chats           Chat[]
   createdAt       DateTime              @default(now())
+}
+
+
+model TurnQueue {
+  id              String                @id @default(cuid())
+  subjectId       String
+  subjectType     String
+  order           Int
+
+  @@index([order(sort: Asc)])
 }
 
 
@@ -337,9 +351,9 @@ enum Difficulty {
 
 
 enum RoomStatus {
+  Initial
   Waiting
-  User
+  Character
   Monster
-  Result
   End
 }

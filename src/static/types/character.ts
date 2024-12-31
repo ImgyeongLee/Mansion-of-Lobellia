@@ -27,6 +27,23 @@ export interface Character {
     dodge: number;
     crit: number;
     speed: number;
+    rowPos: number;
+    colPos: number;
+    hasMoved: boolean;
+    hasActioned: boolean;
+    hasUsedUltimate: boolean;
+    isDead: boolean;
+    isConfused: boolean;
+    isDark: boolean;
+    isImmortal: boolean;
+    attackBuffedAmount: number;
+    attackBuffedTurn: number;
+    defenseBuffedAmount: number;
+    defenseBuffedTurn: number;
+    protectorId: string | null;
+    protectedTurn: number;
+    dotDamageTurn: number;
+    dotDamageAmount: number;
 }
 
 export interface CharacterCreationFormData {

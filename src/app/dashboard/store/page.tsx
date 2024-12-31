@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getCurrentUser } from 'aws-amplify/auth/server';
 import prisma from '@/lib/db/prisma';
 import { getCharacterId, getSub } from '@/lib/db/actions/cookies';
-import { CharacterInventory, StoreItemCard, StoreSection } from './storeCards';
+import { StoreSection } from './storeCards';
 
 export default async function StorePage() {
     let currentCharacterId = await getCharacterId();
