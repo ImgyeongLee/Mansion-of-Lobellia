@@ -16,6 +16,8 @@ import { Dungeon } from '@/static/types/dungeon';
 import { Monster } from '@/static/types/monster';
 import React, { useEffect, useState } from 'react';
 import { Item } from '@prisma/client';
+import { Button } from '@/components/ui/button';
+import { BattleRoomCreationForm } from './forms';
 
 interface SkillCardProps {
     skill: CharacterSkill;
@@ -62,10 +64,20 @@ export function SkillCard({ skill, isDisplay, isHighLight, onClick }: SkillCardP
 }
 
 interface DungeonCardProps {
+    characterId: string;
     dungeon: Dungeon;
 }
 
-export function DungeonCard({ dungeon }: DungeonCardProps) {
+export function DungeonCard({ dungeon, characterId }: DungeonCardProps) {
+    const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+
+    const handleClick = () => {
+        if (isFormOpen) {
+            setIsFormOpen(false);
+        } else {
+            setIsFormOpen(true);
+        }
+    };
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -98,6 +110,13 @@ export function DungeonCard({ dungeon }: DungeonCardProps) {
                         </div>
                     </div>
                 </div>
+                <Button
+                    onClick={handleClick}
+                    type="submit"
+                    className="shadow-none justify-self-center bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
+                    {isFormOpen ? 'Cancel' : 'Create Party'}
+                </Button>
+                {isFormOpen && <BattleRoomCreationForm dungeon={dungeon} characterId={characterId} />}
             </DialogContent>
         </Dialog>
     );

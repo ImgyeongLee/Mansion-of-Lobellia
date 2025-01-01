@@ -296,15 +296,18 @@ model BattleRoom {
   participants    Character[]
   entities        Entity[]
   chats           Chat[]
+  queue           TurnQueue[]
   createdAt       DateTime              @default(now())
 }
 
 
 model TurnQueue {
   id              String                @id @default(cuid())
+  roomId          String
   subjectId       String
   subjectType     String
   order           Int
+  battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([order(sort: Asc)])
 }

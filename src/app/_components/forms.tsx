@@ -378,10 +378,11 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
 }
 
 interface BattleRoomCreationFormProps {
+    characterId: string;
     dungeon: Dungeon;
 }
 
-export function BattleRoomCreationForm({ dungeon }: BattleRoomCreationFormProps) {
+export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreationFormProps) {
     const [error, setError] = useState<string | undefined>('');
     const [pending, setPending] = useState<boolean>(false);
 
@@ -390,49 +391,98 @@ export function BattleRoomCreationForm({ dungeon }: BattleRoomCreationFormProps)
     const form = useForm<z.infer<typeof battleRoomFormSchema>>({
         resolver: zodResolver(battleRoomFormSchema),
         defaultValues: {
-            name: '',
+            roomName: '',
             description: '',
         },
     });
 
     async function onSubmit(values: z.infer<typeof battleRoomFormSchema>) {
-        const formData = { ...values, ...dungeon };
+        setPending(true);
+        try {
+            const response = await fetch('/api/battle/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    formData: {
+                        ...values,
+                        invitationCode: '343434',
+                        dungeonType: dungeon.name,
+                        size: dungeon.size,
+                        difficulty: dungeon.difficulty,
+                        minMember: dungeon.minMember,
+                        maxMember: dungeon.maxMember,
+                    },
+                    characterId: characterId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                router.push('/dashboard/lobby');
+            } else {
+                console.error('Failed to create battle room:', data.message);
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            setError('Failed to create battle room');
+        } finally {
+            setPending(false);
+        }
     }
 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="flex flex-col w-full h-full items-center justify-center p-10">
-                    <FormLabel className="text-main-white text-3xl self-start mb-8">Create Room</FormLabel>
-                    <div className="gap-8 grid grid-cols-2 w-full">
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormControl>
-                                        <Input
-                                            className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
-                                            placeholder="Name"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormControl>
-                                        <Textarea placeholder="Describe your battle room if needed" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                <div className="flex flex-col w-full h-full items-center justify-center">
+                    <FormLabel className="text-main-white text-3xl self-start mb-8">Create Party</FormLabel>
+                    <div className="gap-8 grid grid-cols-2 w-full h-full">
+                        <div className="flex flex-col gap-4">
+                            <FormField
+                                control={form.control}
+                                name="roomName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input
+                                                className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
+                                                placeholder="Party Name"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Textarea
+                                                className="rounded-none border-wine-red resize-none bg-wine-red"
+                                                placeholder="Describe your party if needed"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <div className="flex flex-col">
+                            <div className="text-center text-xl">Notice</div>
+                            <div className={`${ubuntu.className} leading-tight text-sm`}>
+                                Currently, our platform only supports private parties. You need to share your invitation
+                                code to your peers for the battle.
+                            </div>
+                            <div className="pt-2">
+                                Invitation Code: <span className={`${ubuntu.className} select-text`}>{39802849}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className={`${ubuntu.className} text-center mt-3 text-sm`}>{error}</div>

@@ -56,3 +56,39 @@ export async function updateCharacter(characterId: string, formData: CharacterUp
         return { success: false };
     }
 }
+
+export async function addCharacterToBattleRoom(characterId: string, roomId: string) {
+    try {
+        const updatedCharacter = await prisma.character.update({
+            where: {
+                id: characterId,
+            },
+            data: {
+                roomId: roomId,
+            },
+        });
+
+        return { success: true, data: updatedCharacter };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
+export async function removeCharacterFromBattleRoom(characterId: string) {
+    try {
+        const updatedCharacter = await prisma.character.update({
+            where: {
+                id: characterId,
+            },
+            data: {
+                roomId: null,
+            },
+        });
+
+        return { success: true, data: updatedCharacter };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}

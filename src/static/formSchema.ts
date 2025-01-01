@@ -6,6 +6,6 @@ export const characterFormSchema = z.object({
 });
 
 export const battleRoomFormSchema = z.object({
-    name: z.string().min(1).max(20),
+    roomName: z.string().min(1).max(50),
     description: z.string().max(100).optional(),
 });
