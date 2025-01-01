@@ -1,5 +1,6 @@
 export interface Monster {
     id: string;
+    image: string | null;
     name: string;
     description: string | null;
     maxHp: number;
@@ -13,17 +14,20 @@ export interface Monster {
 
 export interface Entity {
     id: string;
+    roomId: string;
+    image: string | null;
     name: string;
     description: string | null;
-    maxHp: number;
     attack: number;
     defense: number;
-    dodge: number;
-    crit: number;
     speed: number;
+    maxHp: number;
+    currentHp: number;
+    crit: number;
+    dodge: number;
     reward: number;
-    rowPos: number;
     colPos: number;
+    rowPos: number;
     isDead: boolean;
     isStun: boolean;
     isConfused: boolean;

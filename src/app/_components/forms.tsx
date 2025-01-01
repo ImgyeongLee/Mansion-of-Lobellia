@@ -415,6 +415,7 @@ export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreat
                         maxMember: dungeon.maxMember,
                     },
                     characterId: characterId,
+                    dungeonId: dungeon.id,
                 }),
             });
 

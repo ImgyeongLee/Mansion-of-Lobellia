@@ -59,7 +59,7 @@ model Character {
   createdAt                       DateTime              @default(now())
   skills                          CharacterSkillRelation[]
   inventory                       CharacterInventory[]
-  battleRoom                      BattleRoom?           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  battleRoom                      BattleRoom?           @relation(fields: [roomId], references: [id], onDelete: SetNull)
   user                            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -109,6 +109,7 @@ model CharacterSkillRelation {
 model Monster {
   id              String                @id @default(cuid())
   name            String
+  image           String?
   description     String?
   maxHp           Int
   attack          Int
@@ -125,18 +126,20 @@ model Monster {
 
 model Entity {
   id              String                @id @default(cuid())
+  image           String?
   roomId          String
   name            String
   description     String?
   maxHp           Int
+  currentHp       Int
   attack          Int
   defense         Int
   dodge           Int
   crit            Int
   speed           Int
   reward          Int
-  rowPos          Int                  
-  colPos          Int                   
+  rowPos          Int                   @default(-1)
+  colPos          Int                   @default(-1)
   isDead          Boolean               @default(false)
   isStun          Boolean               @default(false)
   isConfused      Boolean               @default(false)
