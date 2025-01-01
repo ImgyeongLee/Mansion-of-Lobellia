@@ -180,6 +180,7 @@ model Chat {
   roomId          String
   createdAt       DateTime              @default(now())
   sender          String
+  body            String
   image           String
   chatType        ChatType
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -291,7 +292,7 @@ model BattleRoom {
   maxMember       Int
   difficulty      Difficulty
   round           Int                   @default(0)
-  roomStatus      RoomStatus
+  roomStatus      RoomStatus            @default(Initial)
   participants    Character[]
   entities        Entity[]
   chats           Chat[]

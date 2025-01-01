@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 import { CLASS, CLASS_DESCRIPTION } from '@/static/data';
 import { DiamondMinus, DiamondPlus } from 'lucide-react';
 import { BsDiamond, BsDiamondFill } from 'react-icons/bs';
-import { characterFormSchema } from '@/static/formSchema';
+import { battleRoomFormSchema, characterFormSchema } from '@/static/formSchema';
 import { CharacterClass, CharacterSkill } from '@/static/types/character';
 import { getSkillByClass } from '@/lib/db/actions/skills';
 import { useQuery } from '@tanstack/react-query';
@@ -30,6 +30,8 @@ import { SkillCard } from './cards';
 import { calculateStatsByClass } from '@/lib/utils';
 import { ubuntu } from '@/static/fonts';
 import { useRouter } from 'next/navigation';
+import { Textarea } from '@/components/ui/textarea';
+import { Dungeon } from '@/static/types/dungeon';
 
 export function CharacterCreationForm({ sub }: { sub: string }) {
     const [error, setError] = useState<string | undefined>('');
@@ -45,7 +47,7 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
     const router = useRouter();
     const TOTAL_POINT = 10;
 
-    const { data: fetchedSkills, isLoading } = useQuery({
+    const { data: fetchedSkills } = useQuery({
         queryKey: [characterClass],
         queryFn: async () => {
             const data = await getSkillByClass(characterClass);
@@ -372,5 +374,78 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
                 <div className="text-slate-400 text-sm">{CLASS_DESCRIPTION[characterClass]}</div>
             </div>
         </div>
+    );
+}
+
+interface BattleRoomCreationFormProps {
+    dungeon: Dungeon;
+}
+
+export function BattleRoomCreationForm({ dungeon }: BattleRoomCreationFormProps) {
+    const [error, setError] = useState<string | undefined>('');
+    const [pending, setPending] = useState<boolean>(false);
+
+    const router = useRouter();
+
+    const form = useForm<z.infer<typeof battleRoomFormSchema>>({
+        resolver: zodResolver(battleRoomFormSchema),
+        defaultValues: {
+            name: '',
+            description: '',
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof battleRoomFormSchema>) {
+        const formData = { ...values, ...dungeon };
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="flex flex-col w-full h-full items-center justify-center p-10">
+                    <FormLabel className="text-main-white text-3xl self-start mb-8">Create Room</FormLabel>
+                    <div className="gap-8 grid grid-cols-2 w-full">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <Input
+                                            className="rounded-none border-l-0 border-t-0 border-r-0 border-b-2 border-b-wine-red focus-visible:ring-transparent"
+                                            placeholder="Name"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <Textarea placeholder="Describe your battle room if needed" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className={`${ubuntu.className} text-center mt-3 text-sm`}>{error}</div>
+                    <div className="mt-10 flex flex-col">
+                        <Button
+                            type="submit"
+                            disabled={pending}
+                            className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
+                            {pending ? 'Loading' : 'Create'}
+                        </Button>
+                    </div>
+                </div>
+            </form>
+        </Form>
     );
 }

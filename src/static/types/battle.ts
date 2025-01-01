@@ -9,6 +9,7 @@ export interface Chat {
     roomId: string;
     createdAt: Date;
     sender: string;
+    body: string;
     image: string | null;
     chatType: ChatType;
 }

@@ -62,27 +62,3 @@ export function Sidebar() {
         </nav>
     );
 }
-
-export function BattleSidebar() {
-    return (
-        <nav className="bg-bright-red flex flex-col text-xl py-8">
-            <div className="flex flex-col">
-                <div>User Info section</div>
-                <div>Monster Info section</div>
-            </div>
-            <div className="flex flex-col mt-6">
-                <div
-                    className="hover:bg-middle-red px-6 py-2 transition ease-in-out hover:cursor-pointer"
-                    onClick={() => {
-                        console.log('??');
-                    }}>
-                    Leave
-                </div>
-            </div>
-        </nav>
-    );
-}
-
-export function ChatSidebar() {
-    return <div className="bg-[#101010] flex flex-col">Chat</div>;
-}
