@@ -28,6 +28,7 @@ model Character {
   description                     String?
   class                           Class
   image                           String?               @default("")
+  tokenImage                      String?
   maxHp                           Int
   currentHp                       Int
   maxCost                         Int
@@ -190,17 +191,6 @@ model Chat {
 
   @@index([createdAt(sort: Desc)])
 }
-
-
-// model AIResponse {
-//   id              String                @id @default(cuid())
-//   rowPos          Int
-//   colPos          Int
-//   hpChange        Int
-//   defenseChange   Int
-//   attackChange    Int
-
-// }
 
 
 model MonsterSkill {
