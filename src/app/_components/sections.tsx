@@ -112,9 +112,14 @@ export function CharacterDetailSection({ character }: CharacterDetailSectionProp
                             <CharacterInventory characterId={character.id} />
                             <div className="my-2 text-center">✦ ✦ ✦</div>
                             <div className="text-xl mt-2">Background Story</div>
-                            {character.description && <div>{character.description}</div>}
+                            {character.description && (
+                                <div className="px-3 py-2 text-sm bg-middle-red overflow-y-auto h-[150px]">
+                                    {character.description}
+                                </div>
+                            )}
                             {!character.description && <div>No Description</div>}
                         </div>
+                        <Button>Edit the profile</Button>
                     </div>
                 </div>
             </div>

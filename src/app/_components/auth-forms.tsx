@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { handleSignIn, handleConfirmSignUp, handleSignUp } from '@/lib/db/actions/auth';
 import { useUserStateStore } from '@/lib/store';
+import { validatePassword } from '@/lib/utils';
 
 export function SignInForm() {
     const [error, setError] = useState<string | undefined>('');
@@ -142,6 +143,15 @@ export function SignUpForm() {
     });
 
     async function onSubmit(values: z.infer<typeof signInFormSchema>) {
+        if (values.password != values.confirmation) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        if (!validatePassword(values.password)) {
+            setError('Please check the requirements for the password');
+            return;
+        }
         setIsLoading(true);
         try {
             const result = await handleSignUp(values);
@@ -161,7 +171,16 @@ export function SignUpForm() {
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="py-10 px-20 w-full grid grid-rows-[1fr_3fr_1fr] h-full col-start-2 bg-bright-red">
-                    <FormLabel className="text-main-white text-4xl text-center self-center">Invitation</FormLabel>
+                    <FormLabel className="text-main-white text-4xl text-center self-center">
+                        Invitation{' '}
+                        <div className="flex flex-col text-xs opacity-70">
+                            <div>✦ Password should be longer than 8 characters</div>
+                            <div>✦ Password should contain at least one uppercase.</div>
+                            <div>✦ Password should contain at least one number.</div>
+                            <div>✦ Password should contain at least one special character.</div>
+                        </div>
+                    </FormLabel>
+
                     <div className="flex flex-col items-center justify-center w-full h-full">
                         <div className="gap-3 flex flex-col w-full">
                             <FormField
@@ -234,7 +253,8 @@ export function SignUpForm() {
                             />
                         </div>
                     </div>
-                    <div className="flex flex-row justify-center items-center">
+                    <div className="flex flex-col justify-center items-center">
+                        <div>{error}</div>
                         <Button
                             type="submit"
                             disabled={isLoading}
@@ -251,7 +271,6 @@ export function SignUpForm() {
 export function VerifySignUpForm() {
     const [error, setError] = useState<string | undefined>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const router = useRouter();
     const email = useUserStateStore((state) => state.email);
 
     const handlEmail = useUserStateStore((state) => state.setEmail);

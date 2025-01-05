@@ -1,4 +1,4 @@
-import { CharacterCreationFormData, CharacterUpdateFormData } from '@/static/types/character';
+import { Character, CharacterCreationFormData } from '@/static/types/character';
 import prisma from '../prisma';
 
 export async function createCharacter(formData: CharacterCreationFormData, userSkills: string[]) {
@@ -39,14 +39,14 @@ export async function deleteCharacter(characterId: string) {
     }
 }
 
-export async function updateCharacter(characterId: string, formData: CharacterUpdateFormData) {
+export async function updateCharacter(character: Character) {
     try {
         const updatedCharacter = await prisma.character.update({
             where: {
-                id: characterId,
+                id: character.id,
             },
             data: {
-                ...formData,
+                ...character,
             },
         });
 

@@ -27,7 +27,7 @@ import { CharacterClass, CharacterSkill } from '@/static/types/character';
 import { getSkillByClass } from '@/lib/db/actions/skills';
 import { useQuery } from '@tanstack/react-query';
 import { SkillCard } from './cards';
-import { calculateStatsByClass } from '@/lib/utils';
+import { calculateStatsByClass, generateUniqueRoomCode } from '@/lib/utils';
 import { ubuntu } from '@/static/fonts';
 import { useRouter } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
@@ -384,6 +384,7 @@ interface BattleRoomCreationFormProps {
 
 export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreationFormProps) {
     const [error, setError] = useState<string | undefined>('');
+    const [code, setCode] = useState<string>(generateUniqueRoomCode());
     const [pending, setPending] = useState<boolean>(false);
 
     const router = useRouter();
@@ -407,7 +408,7 @@ export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreat
                 body: JSON.stringify({
                     formData: {
                         ...values,
-                        invitationCode: '343434',
+                        invitationCode: code,
                         dungeonType: dungeon.name,
                         size: dungeon.size,
                         difficulty: dungeon.difficulty,
@@ -433,6 +434,10 @@ export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreat
             setPending(false);
         }
     }
+
+    useEffect(() => {
+        setCode(generateUniqueRoomCode());
+    }, [dungeon]);
 
     return (
         <Form {...form}>
@@ -481,7 +486,7 @@ export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreat
                                 code to your peers for the battle.
                             </div>
                             <div className="pt-2">
-                                Invitation Code: <span className={`${ubuntu.className} select-text`}>{39802849}</span>
+                                Invitation Code: <span className={`${ubuntu.className} select-text`}>{code}</span>
                             </div>
                         </div>
                     </div>

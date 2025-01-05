@@ -16,7 +16,7 @@ export interface Character {
     name: string;
     image: string | null;
     description: string | null;
-    class: string;
+    class: CharacterClass;
     maxHp: number;
     currentHp: number;
     maxCost: number;
