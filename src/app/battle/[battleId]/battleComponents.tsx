@@ -8,10 +8,12 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ChevronDown, Skull } from 'lucide-react';
-import { BattleRoom } from '@/static/types/battle';
+import { BattleRoom, Chat } from '@/static/types/battle';
 import { Entity } from '@/static/types/monster';
 import { ubuntu } from '@/static/fonts';
 import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/lib/db/supabase/client';
+import { getChats } from '@/lib/db/actions/chat';
 
 export function BattleSection({ activeCharacter }: { activeCharacter: Character }) {
     // Move the character and calculate the skill's range
@@ -165,6 +167,42 @@ export function InfoSidebar() {
 }
 
 export function ChatSidebar() {
+    const [chats, setChats] = useState<Chat[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const { roomId } = useParams<{ roomId: string }>();
+
+    const fetchChats = async () => {
+        try {
+            const result = await getChats(roomId);
+            if (result.success && result.chats) {
+                setChats(result.chats);
+            } else {
+                throw new Error('Failed to fetch chats from getChats function');
+            }
+        } catch (error) {
+            console.error('Failed to fetch chats:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchChats();
+        const channel = supabase
+            .channel('public:chat')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Chat' }, (payload) => {
+                const newChat = payload.new as Chat;
+                if (newChat.roomId === roomId) {
+                    setChats((prevChats) => [newChat, ...prevChats]);
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [roomId]);
+
     return (
         <div className="bg-[#101010] relative h-full">
             <div className="overflow-y-auto h-[calc(100vh-116px)] py-4 flex flex-col gap-1"></div>
