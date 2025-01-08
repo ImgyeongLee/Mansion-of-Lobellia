@@ -2,6 +2,21 @@ import { Entity, Monster } from '@/static/types/monster';
 import prisma from '../prisma';
 import { getSkillsByMonster } from './monsters';
 
+export async function getEntity(entityId: string) {
+    try {
+        const entity = await prisma.entity.findUnique({
+            where: {
+                id: entityId,
+            },
+        });
+
+        return { success: true, data: entity };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
 export async function createEntity(battleRoomId: string, monsterType: Monster) {
     try {
         const newEntity = await prisma.entity.create({
