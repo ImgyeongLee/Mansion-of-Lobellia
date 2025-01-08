@@ -35,11 +35,4 @@ export interface Entity {
     buffedTurn: number;
     dotDamageTurn: number;
     dotDamageAmount: number;
-    skills: {
-        name: string;
-        description: string;
-        range: "Self" | "Narrow" | "Normal" | "Wide";
-        isSelfTargeting: boolean;
-        isEntire: boolean;
-    }[]
 }

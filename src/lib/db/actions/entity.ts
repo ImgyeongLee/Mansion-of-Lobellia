@@ -68,3 +68,27 @@ export async function updateEntity(entityId: string, data: Entity) {
         return { success: false };
     }
 }
+
+export async function getSkillsByEntity(entityId: string) {
+    try {
+        const entitySkills = await prisma.entity.findUnique({
+            where: {
+                id: entityId,
+            },
+            include: {
+                skills: {
+                    include: {
+                        skill: true,
+                    },
+                },
+            },
+        });
+
+        const skills = entitySkills?.skills.map((relation) => relation.skill);
+
+        return { success: true, data: skills };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
