@@ -1,6 +1,6 @@
 import prisma from "@/lib/db/prisma";
 
-export async function getParticipantsInfo(battleId: string) {
+export async function getBattleInfo(battleId: string) {
   try {
     const battleInfo = await prisma.battleRoom.findUnique({
       where: {
