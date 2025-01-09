@@ -4,8 +4,8 @@ import { Entity } from "@/static/types/monster";
 export interface AIResponse {
     id: number;
     entityId: string;
-    targetId: string[];
-    skillId: string;
+    targetId: string[] | null;
+    skillId: string | null;
     rowPos: number;
     colPos: number;
     damage: number;
@@ -66,6 +66,8 @@ export interface BattleState {
 //         dotDamageTurn: 0,
 //         dotDamageAmount: 0,
 //         skills: [{
+//             id: '1',
+//             image: '/someimage',
 //             name: "Slash",
 //             description: "A basic slash attack",
 //             range: "Normal",
