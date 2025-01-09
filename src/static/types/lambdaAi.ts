@@ -19,10 +19,22 @@ export interface AIResponse {
     dotDamageAmount: number;
 }
 
+export interface EntityWithSkills extends Entity {
+    skills: {
+        id: string;
+        image: string | null;
+        name: string;
+        description: string | null;
+        range: "Self" | "Narrow" | "Normal" | "Wide";
+        isSelfTargeting: boolean;
+        isEntire: boolean;
+    }[]
+}
+
 export interface BattleState {
     roomId: string;
     round: number;
-    entities: Entity[];
+    entities: EntityWithSkills[];
     characters: Character[];
 }
 
