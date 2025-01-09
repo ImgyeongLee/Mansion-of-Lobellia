@@ -9,3 +9,8 @@ export const battleRoomFormSchema = z.object({
     roomName: z.string().min(1).max(50),
     description: z.string().max(100).optional(),
 });
+
+export const characterUpdateFormSchema = z.object({
+    description: z.string().optional(),
+    image: z.instanceof(File).optional(),
+});

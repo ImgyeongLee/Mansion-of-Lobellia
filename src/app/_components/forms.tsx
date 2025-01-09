@@ -22,8 +22,8 @@ import { useEffect, useState } from 'react';
 import { CLASS, CLASS_DESCRIPTION } from '@/static/data';
 import { DiamondMinus, DiamondPlus } from 'lucide-react';
 import { BsDiamond, BsDiamondFill } from 'react-icons/bs';
-import { battleRoomFormSchema, characterFormSchema } from '@/static/formSchema';
-import { CharacterClass, CharacterSkill } from '@/static/types/character';
+import { battleRoomFormSchema, characterFormSchema, characterUpdateFormSchema } from '@/static/formSchema';
+import { Character, CharacterClass, CharacterSkill } from '@/static/types/character';
 import { getSkillByClass } from '@/lib/db/actions/skills';
 import { useQuery } from '@tanstack/react-query';
 import { SkillCard } from './cards';
@@ -374,6 +374,155 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
                 <div className="text-slate-400 text-sm">{CLASS_DESCRIPTION[characterClass]}</div>
             </div>
         </div>
+    );
+}
+
+interface CharacterUpdateFormProps {
+    character: Character;
+}
+
+export function CharacterUpdateForm({ character }: CharacterUpdateFormProps) {
+    const [error, setError] = useState<string | undefined>('');
+    const [pending, setPending] = useState<boolean>(false);
+
+    const router = useRouter();
+
+    const form = useForm<z.infer<typeof characterUpdateFormSchema>>({
+        resolver: zodResolver(characterUpdateFormSchema),
+        defaultValues: {
+            description: character.description ? character.description : '',
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof characterUpdateFormSchema>) {
+        setPending(true);
+        try {
+            const formData = new FormData();
+            if (values.image instanceof File) {
+                formData.append('file', values.image);
+                const imageResponse = await fetch('/api/image/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (imageResponse.ok) {
+                    try {
+                        const responseData = await imageResponse.json();
+                        const imageUrl = responseData.url;
+                        const updateResponse = await fetch('/api/character/update', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                formData: {
+                                    ...character,
+                                    description: values.description,
+                                    image: imageUrl,
+                                },
+                            }),
+                        });
+
+                        if (updateResponse.ok) {
+                            router.refresh();
+                        } else {
+                            console.error('Error: Failed to update character: ', updateResponse.statusText);
+                        }
+                    } catch (error) {
+                        console.error('Error: Failed to update character: ', error);
+                    }
+                }
+            } else {
+                try {
+                    const updateResponse = await fetch('/api/character/update', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            formData: {
+                                ...character,
+                                description: values.description,
+                            },
+                        }),
+                    });
+
+                    if (updateResponse.ok) {
+                        router.refresh();
+                    } else {
+                        console.error('Error: Failed to update character: ', updateResponse.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error: Failed to update character: ', error);
+                }
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            setError('Failed to update character data');
+        } finally {
+            setPending(false);
+        }
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="flex flex-col w-full h-full items-center justify-center">
+                    <FormLabel className="text-main-white text-3xl self-start mb-8">Update Character Data</FormLabel>
+                    <div className="gap-8 w-full h-full">
+                        <div className="flex flex-col gap-4 justify-center">
+                            <FormField
+                                control={form.control}
+                                name="image"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input
+                                                className="rounded-sm border-none bg-main-black w-1/3 place-self-start focus-visible:ring-transparent"
+                                                type="file"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    field.onChange(file || undefined);
+                                                }}
+                                                name={field.name}
+                                                ref={field.ref}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Textarea
+                                                className="rounded-sm h-[150px] bg-wine-red resize-none border-none w-full focus-visible:ring-transparent"
+                                                placeholder="Your character's background story"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={`${ubuntu.className} text-center mt-3 text-sm`}>{error}</div>
+                    <div className="mt-10 flex flex-col">
+                        <Button
+                            type="submit"
+                            disabled={pending}
+                            className="shadow-none bg-transparent rounded-none bg-main-white text-main-black py-5 w-[calc(150px+10vw)] hover:bg-main-black hover:text-main-white text-xl self-center">
+                            {pending ? 'Loading' : 'Update'}
+                        </Button>
+                    </div>
+                </div>
+            </form>
+        </Form>
     );
 }
 

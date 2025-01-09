@@ -5,6 +5,8 @@ import { ubuntu } from '@/static/fonts';
 import { Character } from '@/static/types/character';
 import { useRouter } from 'next/navigation';
 import { CharacterInventory, CharacterSkillList } from './cards';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { CharacterUpdateForm } from './forms';
 
 interface CharacterDetailSectionProps {
     character: Character;
@@ -33,7 +35,7 @@ export function CharacterDetailSection({ character }: CharacterDetailSectionProp
                         key={character.id}
                         className="bg-bright-red h-full"
                         style={{
-                            backgroundImage: 'url(/Sample.webp)',
+                            backgroundImage: character.image ? `url(${character.image})` : 'none',
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                         }}
@@ -119,7 +121,14 @@ export function CharacterDetailSection({ character }: CharacterDetailSectionProp
                             )}
                             {!character.description && <div>No Description</div>}
                         </div>
-                        <Button>Edit the profile</Button>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>Edit the profile</Button>
+                            </DialogTrigger>
+                            <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[800px] min-w-[400px]">
+                                <CharacterUpdateForm character={character} />
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
             </div>
