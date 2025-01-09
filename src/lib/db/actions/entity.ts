@@ -1,6 +1,7 @@
 import { Entity, Monster } from '@/static/types/monster';
 import prisma from '../prisma';
 import { getSkillsByMonster } from './monsters';
+import { supabase } from '../supabase/client';
 
 export async function getEntity(entityId: string) {
     try {
@@ -11,6 +12,25 @@ export async function getEntity(entityId: string) {
         });
 
         return { success: true, data: entity };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
+export async function getEntitiesByRoomId(roomId: string) {
+    try {
+        const { data, error } = await supabase
+            .from('Entity')
+            .select('*')
+            .eq('roomId', roomId)
+            .order('name', { ascending: true });
+
+        if (error) {
+            return { success: false, error };
+        }
+
+        return { success: true, entities: data };
     } catch (error) {
         console.log(error);
         return { success: false };

@@ -1,5 +1,6 @@
 import { Character, CharacterCreationFormData } from '@/static/types/character';
 import prisma from '../prisma';
+import { supabase } from '../supabase/client';
 
 export async function createCharacter(formData: CharacterCreationFormData, userSkills: string[]) {
     try {
@@ -87,6 +88,25 @@ export async function removeCharacterFromBattleRoom(characterId: string) {
         });
 
         return { success: true, data: updatedCharacter };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
+export async function getCharactersByRoomId(roomId: string) {
+    try {
+        const { data, error } = await supabase
+            .from('Character')
+            .select('*')
+            .eq('roomId', roomId)
+            .order('name', { ascending: true });
+
+        if (error) {
+            return { success: false, error };
+        }
+
+        return { success: true, characters: data };
     } catch (error) {
         console.log(error);
         return { success: false };

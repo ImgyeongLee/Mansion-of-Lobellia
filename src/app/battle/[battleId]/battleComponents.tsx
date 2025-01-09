@@ -14,6 +14,8 @@ import { ubuntu } from '@/static/fonts';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/db/supabase/client';
 import { getChats } from '@/lib/db/actions/chat';
+import { getCharactersByRoomId } from '@/lib/db/actions/characters';
+import { getEntitiesByRoomId } from '@/lib/db/actions/entity';
 
 export function BattleSection({ activeCharacter }: { activeCharacter: Character }) {
     // Move the character and calculate the skill's range
@@ -214,12 +216,106 @@ export function ChatSidebar() {
 }
 
 export function UserMenuBar() {
+    const [characters, setCharacters] = useState<Character[]>([]);
+    const [entities, setEntities] = useState<Entity[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const { roomId } = useParams<{ roomId: string }>();
+
+    useEffect(() => {
+        if (!roomId) return;
+
+        const fetchInitialData = async () => {
+            setLoading(true);
+
+            try {
+                const charactersResult = await getCharactersByRoomId(roomId);
+                const entitiesResult = await getEntitiesByRoomId(roomId);
+
+                if (charactersResult.success && charactersResult.characters) setCharacters(charactersResult.characters);
+                if (entitiesResult.success && entitiesResult.entities) setEntities(entitiesResult.entities);
+            } catch (error) {
+                console.error('Failed to fetch initial data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInitialData();
+
+        const characterSubscription = supabase
+            .channel('public:character')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'Character',
+                },
+                (payload) => {
+                    console.log('Realtime Character payload:', payload);
+
+                    if (payload.eventType === 'INSERT') {
+                        setCharacters((prev) => [...prev, payload.new as Character]);
+                    } else if (payload.eventType === 'UPDATE') {
+                        setCharacters((prev) =>
+                            prev.map((char) => (char.id === payload.new.id ? (payload.new as Character) : char))
+                        );
+                    } else if (payload.eventType === 'DELETE') {
+                        setCharacters((prev) => prev.filter((char) => char.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        const entitySubscription = supabase
+            .channel('public:entity')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'Entity',
+                },
+                (payload) => {
+                    console.log('Realtime Entity payload:', payload);
+
+                    if (payload.eventType === 'INSERT') {
+                        setEntities((prev) => [...prev, payload.new as Entity]);
+                    } else if (payload.eventType === 'UPDATE') {
+                        setEntities((prev) =>
+                            prev.map((entity) => (entity.id === payload.new.id ? (payload.new as Entity) : entity))
+                        );
+                    } else if (payload.eventType === 'DELETE') {
+                        setEntities((prev) => prev.filter((entity) => entity.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(characterSubscription);
+            supabase.removeChannel(entitySubscription);
+        };
+    }, [roomId]);
+
     return (
         <div className="w-full px-12 h-full content-center">
-            <div className="w-full bg-middle-red h-16 rounded-md grid grid-cols-[1fr_2fr] self-center">
-                <div className="w-full bg-slate-500"></div>
-                <div className="w-full bg-lime-950"></div>
-            </div>
+            {loading ? (
+                <div>Loading...</div>
+            ) : (
+                <div className="w-full bg-middle-red h-16 rounded-md grid grid-cols-[1fr_2fr] self-center">
+                    <div className="w-full bg-slate-500">
+                        {characters.map((char) => (
+                            <div key={char.id}>{char.name}</div>
+                        ))}
+                    </div>
+                    <div className="w-full bg-lime-950">
+                        {entities.map((entity) => (
+                            <div key={entity.id}>{entity.name}</div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
