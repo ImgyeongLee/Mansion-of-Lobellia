@@ -1,3 +1,5 @@
+type SkillRange = 'Self' | 'Narrow' | 'Normal' | 'Wide';
+
 export interface Monster {
     id: string;
     image: string | null;
@@ -35,4 +37,14 @@ export interface Entity {
     buffedTurn: number;
     dotDamageTurn: number;
     dotDamageAmount: number;
+}
+
+export interface MonsterSkill {
+    id: string;
+    image: string | null;
+    name: string;
+    description: string | null;
+    range: SkillRange;
+    isSelfTargeting: boolean;
+    isEntire: boolean;
 }
