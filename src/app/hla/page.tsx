@@ -31,13 +31,15 @@ export default function Hla() {
             buffedTurn: 0,
             dotDamageTurn: 0,
             dotDamageAmount: 0,
-            // skills: [{
-            //     name: "Slash",
-            //     description: "A basic slash attack",
-            //     range: "Normal",
-            //     isSelfTargeting: false,
-            //     isEntire: false
-            // }]
+            skills: [{
+                id: '1',
+                image: '//somelink',
+                name: "Slash",
+                description: "A basic slash attack",
+                range: "Normal",
+                isSelfTargeting: false,
+                isEntire: false
+            }]
         }],
         characters: [{
             id: "char1",
