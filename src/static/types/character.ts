@@ -1,12 +1,14 @@
 export type CharacterClass = 'Gladiolus' | 'Saintpaulia' | 'Cypress' | 'Blackthorn';
 
+type SkillRange = 'Self' | 'Narrow' | 'Normal' | 'Wide';
+
 export interface CharacterSkill {
     id: string;
     name: string;
     image: string | null;
     description: string | null;
     type: string;
-    range: string;
+    range: SkillRange;
     requiredCost: number;
     requiredHp: number;
 }
