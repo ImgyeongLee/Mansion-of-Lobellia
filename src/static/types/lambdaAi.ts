@@ -1,22 +1,13 @@
-import { Character } from "@/static/types/character";
-import { Entity } from "@/static/types/monster";
+import { Character } from '@/static/types/character';
+import { Entity } from '@/static/types/monster';
 
 export interface AIResponse {
     id: number;
     entityId: string;
-    targetId: string[];
-    skillId: string;
+    targetId: string[] | null;
+    skillId: string | null;
     rowPos: number;
     colPos: number;
-    damage: number;
-    hasTarget: boolean;
-    isDead: boolean;
-    isStun: boolean;
-    isConfused: boolean;
-    buffedAmount: number;
-    buffedTurn: number;
-    dotDamageTurn: number;
-    dotDamageAmount: number;
 }
 
 export interface BattleState {

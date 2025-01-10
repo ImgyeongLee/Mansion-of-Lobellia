@@ -35,8 +35,10 @@ export interface Character {
     hasActioned: boolean;
     hasUsedUltimate: boolean;
     isDead: boolean;
+    isStun: boolean;
     isConfused: boolean;
     isDark: boolean;
+    isFocused: boolean;
     isImmortal: boolean;
     attackBuffedAmount: number;
     attackBuffedTurn: number;
