@@ -40,10 +40,11 @@ model Character {
   crit                            Int
   speed                           Int
   rowPos                          Int                   @default(-1)
-  colPos                          Int                   @default(-1)
+  colPos                          Int                   @default(-1)              
   hasMoved                        Boolean               @default(false)
   hasActioned                     Boolean               @default(false)
   hasUsedUltimate                 Boolean               @default(false)
+  isReady                         Boolean               @default(false)
   isDead                          Boolean               @default(false)
   isStun                          Boolean               @default(false)
   isConfused                      Boolean               @default(false)

@@ -573,6 +573,7 @@ export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreat
 
             if (response.ok) {
                 router.push('/dashboard/lobby');
+                router.refresh();
             } else {
                 console.error('Failed to create battle room:', data.message);
             }

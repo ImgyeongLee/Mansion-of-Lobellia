@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
         if (result.success && result.battleRoom) {
             // Update the character's battleRoomId (Add the character to the room)
             const characterResult = await addCharacterToBattleRoom(characterId, result.battleRoom.id);
+            const positions: string[] = [];
 
             // Create the entities and add them to the room
             try {
@@ -36,7 +37,21 @@ export async function POST(req: NextRequest) {
                     monsters.data.map(async (monster) => {
                         const newEntity = await createEntity(result.battleRoom.id, monster);
                         if (newEntity.data) {
-                            await updateEntity(newEntity.data.id, { ...newEntity.data, roomId: result.battleRoom.id });
+                            let rowPos = Math.floor(Math.random() * result.battleRoom.size);
+                            let colPos = Math.floor(Math.random() * result.battleRoom.size);
+                            if (positions.includes(`${rowPos}-${colPos}`)) {
+                                while (positions.includes(`${rowPos}-${colPos}`)) {
+                                    rowPos = Math.floor(Math.random() * result.battleRoom.size);
+                                    colPos = Math.floor(Math.random() * result.battleRoom.size);
+                                }
+                            }
+                            positions.push(`${rowPos}-${colPos}`);
+                            await updateEntity(newEntity.data.id, {
+                                ...newEntity.data,
+                                rowPos: rowPos,
+                                colPos: colPos,
+                                roomId: result.battleRoom.id,
+                            });
                         }
                     })
                 );

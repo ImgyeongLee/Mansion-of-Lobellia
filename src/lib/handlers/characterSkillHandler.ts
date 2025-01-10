@@ -87,8 +87,9 @@ export async function handleCharacterItem(character: Character, item: Item) {
 }
 
 function calculateCharacterAttackAmount(character: Character, skillEffect: number, entity?: Entity) {
-    let characterDamage =
-        (character.attack + character.attack * ((100 + character.attackBuffedAmount) / 100)) * skillEffect;
+    let characterDamage = Math.round(
+        (character.attack + character.attack * ((100 + character.attackBuffedAmount) / 100)) * skillEffect
+    );
 
     if (character.isFocused) {
         characterDamage *= 2;

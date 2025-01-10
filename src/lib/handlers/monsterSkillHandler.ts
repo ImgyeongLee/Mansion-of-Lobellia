@@ -13,23 +13,45 @@ export async function handleAIResponse(
     entity.colPos = response.colPos;
     entity.rowPos = response.rowPos;
 
-    // Update their status
-    entity.isDead = response.isDead;
-    entity.isStun = response.isStun;
-    entity.isConfused = response.isConfused;
-    entity.buffedAmount = response.buffedAmount;
-    entity.buffedTurn = response.buffedTurn;
-    entity.dotDamageTurn = response.dotDamageTurn;
-    entity.dotDamageAmount = response.dotDamageAmount;
-
-    if (!response.hasTarget) {
-        return;
+    // Handle their skill actions
+    if (skill) {
+        if (skill.name == 'Clumsy Attack') {
+            if (targetCharacters) {
+                targetCharacters.forEach((character) => {
+                    const entityDamage = calculateEntityAttackAmount(entity, 1, character);
+                    character.currentHp -= entityDamage;
+                });
+            }
+        } else if (skill.name == 'Clumsy Heal') {
+            if (targetEntites) {
+                targetEntites[0].currentHp += Math.round(targetEntites[0].maxHp * 0.2);
+                if (targetEntites[0].currentHp >= targetEntites[0].maxHp) {
+                    targetEntites[0].currentHp = targetEntites[0].maxHp;
+                }
+            }
+        } else if (skill.name == 'Morale Boost') {
+            if (targetEntites) {
+                targetEntites[0].buffedAmount = 30;
+                targetEntites[0].buffedTurn = 2;
+            }
+        }
     }
-
-    // If the action has the target, handle that case
 }
 
-function calculateEntityAttackAmount(entity: Entity, skillEffect: number, character?: Character) {}
+function calculateEntityAttackAmount(entity: Entity, skillEffect: number, character?: Character) {
+    let entityDamage = Math.round((entity.attack + entity.attack * ((100 + entity.buffedAmount) / 100)) * skillEffect);
+
+    if (isCritical(entity)) {
+        entityDamage *= 2;
+    }
+
+    if (character) {
+        const finalDamage = Math.round(entityDamage * ((100 - character.defense) / 100));
+        return finalDamage;
+    }
+
+    return entityDamage;
+}
 
 function isCritical(entity: Entity) {
     return Math.random() * 100 <= entity.crit;
