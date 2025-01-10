@@ -3,6 +3,7 @@ import { Gelasio } from 'next/font/google';
 import './globals.css';
 import ConfigureAmplifyClientSide from './_components/providers/authProvider';
 import { TanstackProvider } from './_components/providers/queryProviders';
+import { Toaster } from '@/components/ui/toaster';
 export const gelasio = Gelasio({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({
         <html lang="en">
             <body className={`${gelasio.className} antialiased`}>
                 <TanstackProvider>
+                    <Toaster />
                     <ConfigureAmplifyClientSide />
                     {children}
                 </TanstackProvider>

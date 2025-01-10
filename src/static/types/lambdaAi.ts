@@ -10,10 +10,22 @@ export interface AIResponse {
     colPos: number;
 }
 
+export interface EntityWithSkills extends Entity {
+    skills: {
+        id: string;
+        image: string | null;
+        name: string;
+        description: string | null;
+        range: "Self" | "Narrow" | "Normal" | "Wide";
+        isSelfTargeting: boolean;
+        isEntire: boolean;
+    }[]
+}
+
 export interface BattleState {
     roomId: string;
     round: number;
-    entities: Entity[];
+    entities: EntityWithSkills[];
     characters: Character[];
 }
 
@@ -45,6 +57,8 @@ export interface BattleState {
 //         dotDamageTurn: 0,
 //         dotDamageAmount: 0,
 //         skills: [{
+//             id: '1',
+//             image: '/someimage',
 //             name: "Slash",
 //             description: "A basic slash attack",
 //             range: "Normal",
