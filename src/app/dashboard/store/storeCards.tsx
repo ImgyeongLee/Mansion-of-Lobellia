@@ -8,6 +8,8 @@ import { ubuntu } from '@/static/fonts';
 import { Item } from '@prisma/client';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { appearsFromLeftFadeIn, appearsFromRightFadeIn } from '@/lib/motionVariants';
 
 interface StoreItemCardProps {
     item: Item;
@@ -119,7 +121,11 @@ export function CharacterInventory({ characterId }: { characterId: string }) {
     }, [fetchedItems]);
 
     return (
-        <div className="bg-wine-red p-5 h-full rounded-md">
+        <motion.div
+            variants={appearsFromLeftFadeIn}
+            initial="initial"
+            animate="animate"
+            className="bg-wine-red p-5 h-full rounded-md">
             <div className="bg-middle-red p-2 h-full">
                 <div className="flex flex-row gap-2">
                     {items &&
@@ -132,14 +138,18 @@ export function CharacterInventory({ characterId }: { characterId: string }) {
                         ))}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
 export function StoreSection({ storeItems, characterId }: { storeItems: Item[]; characterId: string }) {
     return (
         <div className="grid grid-rows-2 gap-2 items-center h-full -mt-10 mb-6">
-            <div className="h-full grid grid-cols-[1fr_1.5fr]">
+            <motion.div
+                variants={appearsFromRightFadeIn}
+                initial="initial"
+                animate="animate"
+                className="h-full grid grid-cols-[1fr_1.5fr]">
                 <div className="bg-bright-red h-full p-5">
                     <div className="bg-middle-red h-full p-3">
                         <div className="flex flex-row gap-2">
@@ -154,7 +164,7 @@ export function StoreSection({ storeItems, characterId }: { storeItems: Item[]; 
                     </div>
                 </div>
                 <div className="bg-amber-800 h-full"></div>
-            </div>
+            </motion.div>
             <CharacterInventory characterId={characterId as string} />
         </div>
     );

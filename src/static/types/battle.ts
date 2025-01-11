@@ -1,4 +1,6 @@
+import { Character } from './character';
 import { DungeonDifficulty } from './dungeon';
+import { Entity } from './monster';
 
 export type ChatType = 'Chat' | 'System' | 'Action' | 'Result' | 'Debuff' | 'Buff';
 
@@ -38,4 +40,6 @@ export interface BattleRoom {
     round: number;
     roomStatus: RoomStatus;
     createdAt: Date;
+    participants: Character[];
+    entities: Entity[];
 }

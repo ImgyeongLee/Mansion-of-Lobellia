@@ -103,10 +103,41 @@ export async function getCharactersByRoomId(roomId: string) {
             .order('name', { ascending: true });
 
         if (error) {
+            console.error('Error fetching characters:', error);
             return { success: false, error };
         }
 
         return { success: true, characters: data };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
+export async function leaveBattleRoom(characterId: string, roomId: string) {
+    try {
+        const { data, error } = await supabase.from('Character').update({ roomId: null }).eq('id', characterId);
+
+        if (error) {
+            console.error('Error leaving battle room:', error);
+            return { success: false, error };
+        }
+
+        const characters = await supabase.from('Character').select('*').eq('roomId', roomId);
+        if (characters.error) {
+            console.error('Error fetching characters:', characters.error);
+            return { success: false, error: characters.error };
+        }
+
+        if (characters.data.length === 0) {
+            const { error } = await supabase.from('BattleRoom').delete().eq('id', roomId);
+            if (error) {
+                console.error('Error deleting battle room:', error);
+                return { success: false, error };
+            }
+        }
+
+        return { success: true, updatedCharacter: data };
     } catch (error) {
         console.log(error);
         return { success: false };

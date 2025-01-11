@@ -1,7 +1,8 @@
-import { BattleRoomFormData } from '@/static/types/battle';
+import { BattleRoom, BattleRoomFormData } from '@/static/types/battle';
 import prisma from '../prisma';
 import { Entity } from '@prisma/client';
 import { Character } from '@/static/types/character';
+import { supabase } from '../supabase/client';
 
 export async function createBattleRoom(formData: BattleRoomFormData) {
     try {
@@ -27,6 +28,24 @@ export async function deleteBattleRoom(battleRoomId: string) {
         });
 
         return { success: true };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
+export async function getBattleRoomByCode(code: string) {
+    try {
+        const { data, error } = await supabase
+            .from('BattleRoom')
+            .select('*')
+            .eq('invitationCode', code.trim())
+            .single();
+        if (error) {
+            console.error('Error fetching battle room:', error);
+            return { success: false };
+        }
+        return { success: true, data: data as BattleRoom };
     } catch (error) {
         console.log(error);
         return { success: false };

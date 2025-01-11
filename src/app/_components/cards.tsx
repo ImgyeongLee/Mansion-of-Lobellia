@@ -10,7 +10,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { CharacterSkill } from '@/static/types/character';
+import { Character, CharacterSkill } from '@/static/types/character';
 import { cn } from '@/lib/utils';
 import { Dungeon } from '@/static/types/dungeon';
 import { Monster } from '@/static/types/monster';
@@ -18,6 +18,10 @@ import React, { useEffect, useState } from 'react';
 import { Item } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { BattleRoomCreationForm } from './forms';
+import { motion } from 'framer-motion';
+import { appearsFromRightFadeIn, fadeIn } from '@/lib/motionVariants';
+import Image from 'next/image';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SkillCardProps {
     skill: CharacterSkill;
@@ -81,9 +85,13 @@ export function DungeonCard({ dungeon, characterId }: DungeonCardProps) {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <div className="relative cursor-pointer bg-black w-full h-[200px] hover:-translate-y-3 transition ease-in-out">
+                <motion.div
+                    variants={fadeIn}
+                    initial="initial"
+                    animate="animate"
+                    className="relative cursor-pointer bg-black w-full h-[200px] hover:translate-x-3 transition ease-in-out">
                     <div className="absolute right-0 bottom-0 text-3xl p-5">{dungeon.name}</div>
-                </div>
+                </motion.div>
             </DialogTrigger>
             <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[800px] min-w-[400px]">
                 <DialogHeader>
@@ -206,6 +214,13 @@ export function ItemCard({ item, children }: ItemCardProps) {
             <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[400px] min-w-[320px]">
                 <div className="flex flex-col justify-center w-full items-center">
                     <div className="bg-slate-700 w-[100px] h-[100px] mb-4"></div>
+                    <Image
+                        src={'/simple-decorative-line.svg'}
+                        alt="decorative-line"
+                        width={150}
+                        height={10}
+                        className="-mt-16 -mb-24 self-center pl-1"
+                    />
                     <div className="text-lg">{item.name}</div>
                     <div className={`${ubuntu.className} text-sm`}>{item.description}</div>
                     {children}
@@ -240,7 +255,15 @@ export function CharacterInventory({ characterId }: { characterId: string }) {
     }, [characterId]);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex flex-row gap-2">
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+            </div>
+        );
     }
 
     if (items.length == 0) {
@@ -281,7 +304,13 @@ export function CharacterSkillList({ characterId }: { characterId: string }) {
     }, [characterId]);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex flex-row gap-2 w-full justify-center">
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+                <Skeleton className="w-[50px] h-[50px] rounded-full bg-slate-500 " />
+            </div>
+        );
     }
 
     return (
@@ -290,5 +319,58 @@ export function CharacterSkillList({ characterId }: { characterId: string }) {
                 <SkillCard key={skill.id} skill={skill} isDisplay={true} />
             ))}
         </div>
+    );
+}
+
+interface CharacterCardProps {
+    character: Character;
+}
+
+export function CharacterLobbyCard({ character }: CharacterCardProps) {
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <motion.div
+                        variants={appearsFromRightFadeIn}
+                        initial="initial"
+                        animate="animate"
+                        className="flex flex-col">
+                        <div
+                            key={character.id}
+                            className={'text-sm w-[250px] h-[400px] bg-bright-red'}
+                            style={{
+                                backgroundImage: character.image ? `url(${character.image})` : 'none',
+                                backgroundSize: '300%',
+                                backgroundPosition: 'top',
+                            }}>
+                            <div className="px-3 py-2 text-2xl w-full text-end">{character.name}</div>
+                        </div>
+                        <Image
+                            src={'/decorative-line.svg'}
+                            alt=""
+                            width={180}
+                            height={10}
+                            className="-mt-8 self-center"
+                        />
+                    </motion.div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-black bg-opacity-80" side="right">
+                    <div className={`${ubuntu.className} text-main-white flex flex-col`}>
+                        <div>
+                            HP: {character.currentHp}/{character.maxHp}
+                        </div>
+                        <div>
+                            COST: {character.currentCost}/{character.maxCost}
+                        </div>
+                        <div>ATK: {character.attack}</div>
+                        <div>DEF: {character.defense}</div>
+                        <div>DODGE: {character.dodge}</div>
+                        <div>CRIT: {character.crit}</div>
+                        <div>SPD: {character.speed}</div>
+                    </div>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 }
