@@ -10,44 +10,44 @@ import { BattleRoom } from '@/static/types/battle';
 import { LobbySection, NonLobbySection } from '@/app/_components/sections';
 
 export default async function LobbyPage() {
-    let currentUserSub = await getSub();
+  let currentUserSub = await getSub();
 
-    if (!currentUserSub) {
-        const currentUser = await runWithAmplifyServerContext({
-            nextServerContext: { cookies },
-            operation: (contextSpec) => getCurrentUser(contextSpec),
-        });
-        currentUserSub = currentUser?.userId;
-
-        if (currentUserSub === undefined) {
-            redirect('/');
-        }
-    }
-
-    const character = await prisma.character.findFirst({
-        where: {
-            userId: currentUserSub,
-        },
+  if (!currentUserSub) {
+    const currentUser = await runWithAmplifyServerContext({
+      nextServerContext: { cookies },
+      operation: (contextSpec) => getCurrentUser(contextSpec),
     });
+    currentUserSub = currentUser?.userId;
 
-    if (!character) {
-        return (
-            <RedirectWithToast
-                href={'/dashboard/character'}
-                title={'No character found'}
-                description={'Redirecting you to character creation...'}
-                variant={'destructive'}
-            />
-        );
+    if (currentUserSub === undefined) {
+      redirect('/');
     }
+  }
 
-    const battleResult = await getUserDungeonsWithInfo(currentUserSub);
+  const character = await prisma.character.findFirst({
+    where: {
+      userId: currentUserSub,
+    },
+  });
 
-    if (!battleResult.data || !character.roomId) {
-        return <NonLobbySection character={character} />;
-    }
+  if (!character) {
+    return (
+      <RedirectWithToast
+        href={'/dashboard/character'}
+        title={'No character found'}
+        description={'Redirecting you to character creation...'}
+        variant={'destructive'}
+      />
+    );
+  }
 
-    const battleInfo: BattleRoom = battleResult.data;
+  const battleResult = await getUserDungeonsWithInfo(currentUserSub);
 
-    return <LobbySection character={character} battleInfo={battleInfo} />;
+  if (!battleResult.data || !character.roomId) {
+    return <NonLobbySection character={character} />;
+  }
+
+  const battleInfo: BattleRoom = battleResult.data;
+
+  return <LobbySection character={character} battleInfo={battleInfo} />;
 }
