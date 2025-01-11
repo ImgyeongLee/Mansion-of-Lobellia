@@ -338,20 +338,21 @@ export function CharacterLobbyCard({ character }: CharacterCardProps) {
                         className="flex flex-col">
                         <div
                             key={character.id}
-                            className={'text-sm w-[250px] h-[400px] bg-bright-red'}
+                            className={'text-sm w-[250px] h-[400px] bg-bright-red relative'}
                             style={{
                                 backgroundImage: character.image ? `url(${character.image})` : 'none',
                                 backgroundSize: '300%',
                                 backgroundPosition: 'top',
                             }}>
-                            <div className="px-3 py-2 text-2xl w-full text-end">{character.name}</div>
+                            <div className="h-full w-full bg-gradient-to-t from-black from-5% via-transparent absolute top-0 z-10"></div>
+                            <div className="px-3 py-2 text-2xl w-full text-end ">{character.name}</div>
                         </div>
                         <Image
                             src={'/decorative-line.svg'}
                             alt=""
                             width={180}
                             height={10}
-                            className="-mt-8 self-center"
+                            className="-mt-9 self-center z-30"
                         />
                     </motion.div>
                 </TooltipTrigger>
