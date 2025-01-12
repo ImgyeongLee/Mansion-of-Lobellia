@@ -17,7 +17,6 @@ import { createChat, getChats } from '@/lib/db/actions/chat';
 import { getCharactersByRoomId } from '@/lib/db/actions/characters';
 import { getEntitiesByRoomId } from '@/lib/db/actions/entity';
 import { Item } from '@/static/types/item';
-import { getCharacterInventory } from '@/lib/db/actions/inventory';
 import { ItemCard, SkillCard } from '@/app/_components/cards';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -391,7 +390,7 @@ export function ChatSidebar({ character }: { character: Character }) {
                         setText(e.target.value);
                     }}
                     onKeyDown={(e) => {
-                        console.log(e.key);
+                        console.log('');
                         if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
                             handleSendChat();
