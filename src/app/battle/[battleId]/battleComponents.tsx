@@ -35,6 +35,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
     const { toast } = useToast();
     // Move the character and calculate the skill's range
     const { battleId } = useParams<{ battleId: string }>();
+    const [currentCharacter, setCurrentCharacter] = useState<Character>(activeCharacter);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [entities, setEntities] = useState<Entity[]>([]);
     const [showDialog, setShowDialog] = useState<boolean>(false);
@@ -82,6 +83,9 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                         setCharacters((prev) =>
                             prev.map((char) => (char.id === payload.new.id ? { ...char, ...payload.new } : char))
                         );
+                        if (payload.new.id === activeCharacter.id) {
+                            setCurrentCharacter((prev) => ({ ...prev, ...payload.new }));
+                        }
                     } else if (payload.eventType === 'INSERT') {
                         setCharacters((prev) => [...prev, payload.new as Character]);
                     } else if (payload.eventType === 'DELETE') {
@@ -202,7 +206,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                             {Array.from({ length: GRID_SIZE }).map((_, colIndex) => {
                                 const cellKey = `${rowIndex}-${colIndex}`;
                                 const isActiveCharacter =
-                                    activeCharacter.colPos === colIndex && activeCharacter.rowPos === rowIndex;
+                                    currentCharacter.colPos === colIndex && currentCharacter.rowPos === rowIndex;
 
                                 return (
                                     <TooltipProvider key={cellKey}>
@@ -243,11 +247,11 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                                         <div
                                                             className={
                                                                 'flex flex-col ' +
-                                                                (activeCharacter && isActiveCharacter ? ' mb-1' : '')
+                                                                (currentCharacter && isActiveCharacter ? ' mb-1' : '')
                                                             }>
                                                             {activeCharacter &&
                                                                 isActiveCharacter &&
-                                                                !activeCharacter.isDead && (
+                                                                !currentCharacter.isDead && (
                                                                     <ChevronDown
                                                                         className={
                                                                             '-mb-3 animate-bounce self-center stroke-black'
@@ -312,7 +316,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                     ))}
                 </div>
             </section>
-            <UserMenuBar character={activeCharacter} />
+            <UserMenuBar character={currentCharacter} />
             {showDialog && (
                 <Dialog
                     title={'Set your character position here?'}
@@ -606,7 +610,6 @@ export function UserMenuBar({ character }: { character: Character }) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [skills, setSkills] = useState<CharacterSkill[]>([]);
     const [items, setItems] = useState<Item[]>([]);
-    const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -637,23 +640,6 @@ export function UserMenuBar({ character }: { character: Character }) {
     useEffect(() => {
         if (!character.id) return;
 
-        const characterSubscription = supabase
-            .channel('public:character')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'Character',
-                },
-                (payload) => {
-                    if (payload.eventType === 'UPDATE') {
-                        setCurrentCharacter((prev) => (prev.id === payload.new.id ? (payload.new as Character) : prev));
-                    }
-                }
-            )
-            .subscribe();
-
         const inventorySubscription = supabase
             .channel('public:characterInventory')
             .on(
@@ -678,7 +664,6 @@ export function UserMenuBar({ character }: { character: Character }) {
             .subscribe();
 
         return () => {
-            supabase.removeChannel(characterSubscription);
             supabase.removeChannel(inventorySubscription);
         };
     }, [character.id]);
@@ -696,11 +681,11 @@ export function UserMenuBar({ character }: { character: Character }) {
                                 <div
                                     className="bg-bright-red h-full"
                                     style={{
-                                        width: `${(currentCharacter.currentHp / currentCharacter.maxHp) * 100}%`,
+                                        width: `${(character.currentHp / character.maxHp) * 100}%`,
                                     }}></div>
                                 <div className="absolute inset-0 flex items-center justify-center text-xs">
                                     <span className={`${ubuntu.className}`}>
-                                        {currentCharacter.currentHp} / {currentCharacter.maxHp}
+                                        {character.currentHp} / {character.maxHp}
                                     </span>
                                 </div>
                             </div>
@@ -711,11 +696,11 @@ export function UserMenuBar({ character }: { character: Character }) {
                                 <div
                                     className="bg-[#d4972e] h-full"
                                     style={{
-                                        width: `${(currentCharacter.currentCost / currentCharacter.maxCost) * 100}%`,
+                                        width: `${(character.currentCost / character.maxCost) * 100}%`,
                                     }}></div>
                                 <div className="absolute inset-0 flex items-center justify-center text-xs">
                                     <span className={`${ubuntu.className}`}>
-                                        {currentCharacter.currentCost} / {currentCharacter.maxCost}
+                                        {character.currentCost} / {character.maxCost}
                                     </span>
                                 </div>
                             </div>
