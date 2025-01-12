@@ -1,8 +1,9 @@
-import { BattleRoom, BattleRoomFormData } from '@/static/types/battle';
+import { BattleRoom, BattleRoomFormData, RoomStatus } from '@/static/types/battle';
 import prisma from '../prisma';
 import { Entity } from '@prisma/client';
 import { Character } from '@/static/types/character';
 import { supabase } from '../supabase/client';
+import { updateCharacter } from './characters';
 
 export async function createBattleRoom(formData: BattleRoomFormData) {
     try {
@@ -13,6 +14,57 @@ export async function createBattleRoom(formData: BattleRoomFormData) {
         });
 
         return { success: true, battleRoom: newBattleRoom };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
+export async function updateBattleStatus(battleRoomId: string, status: RoomStatus) {
+    try {
+        const updated = await prisma.battleRoom.update({
+            where: {
+                id: battleRoomId,
+            },
+            data: {
+                roomStatus: status,
+            },
+        });
+
+        return { success: true, data: updated };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
+export async function updateBattleRound(battleRoomId: string) {
+    try {
+        const updated = await prisma.battleRoom.update({
+            where: {
+                id: battleRoomId,
+            },
+            data: {
+                round: {
+                    increment: 1,
+                },
+            },
+        });
+
+        const characters = await prisma.character.findMany({
+            where: {
+                roomId: battleRoomId,
+            },
+        });
+
+        characters.forEach(async (character) => {
+            character.hasMoved = false;
+            character.hasActioned = false;
+            character.hasUsedUltimate = false;
+            await updateCharacter(character);
+        });
+
+        return { success: true, data: updated };
     } catch (error) {
         console.log(error);
         return { success: false };
@@ -60,7 +112,7 @@ export async function createTurnQueue(battleRoomId: string, participants: (Entit
             roomId: battleRoomId,
             subjectId: participant.id,
             order: index + 1,
-            subjectType: typeof participant as string,
+            subjectType: 'class' in participant ? 'Character' : 'Monster',
         }));
 
         const createdTurnQueue = await prisma.turnQueue.createMany({
@@ -94,6 +146,24 @@ export async function getTurnQueue(battleRoomId: string) {
     }
 }
 
+export async function getFirstTurn(battleRoomId: string) {
+    try {
+        const turnQueue = await prisma.turnQueue.findFirst({
+            where: {
+                roomId: battleRoomId,
+            },
+            orderBy: {
+                order: 'asc',
+            },
+        });
+
+        return { success: true, data: turnQueue };
+    } catch (error) {
+        console.log(error);
+        return { success: false };
+    }
+}
+
 export async function proceedTurnQueue(subjectId: string) {
     try {
         const subject = await prisma.turnQueue.findFirst({
@@ -103,13 +173,14 @@ export async function proceedTurnQueue(subjectId: string) {
         });
 
         if (!subject) return { success: false };
-        subject.order += 2;
         await prisma.turnQueue.update({
             where: {
                 id: subject.id,
             },
             data: {
-                order: subject.order,
+                order: {
+                    increment: 1,
+                },
             },
         });
 
