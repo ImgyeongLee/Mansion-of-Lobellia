@@ -7,6 +7,7 @@ export type ChatType = 'Chat' | 'System' | 'Action' | 'Result' | 'Debuff' | 'Buf
 export type RoomStatus = 'Initial' | 'Waiting' | 'Character' | 'Monster' | 'End';
 
 export interface BattleRoomFormData {
+    hostId: string;
     invitationCode: string;
     roomName: string;
     dungeonType: string;

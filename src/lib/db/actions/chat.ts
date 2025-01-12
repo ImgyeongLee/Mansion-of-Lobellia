@@ -1,10 +1,12 @@
 import { ChatBody } from '@/static/types/battle';
 import { supabase } from '../supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function createChat(chat: ChatBody) {
-    const { error } = await supabase.from('Chat').insert(chat);
+    const { error } = await supabase.from('Chat').insert({ ...chat, id: uuidv4() });
 
     if (error) {
+        console.log(error);
         return { success: false, error };
     }
 

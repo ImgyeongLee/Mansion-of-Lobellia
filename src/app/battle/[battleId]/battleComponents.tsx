@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { Character, CharacterSkill } from '@/static/types/character';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ChevronDown, Skull } from 'lucide-react';
 import { BattleRoom, Chat, ChatBody } from '@/static/types/battle';
@@ -19,6 +19,7 @@ import { getEntitiesByRoomId } from '@/lib/db/actions/entity';
 import { Item } from '@/static/types/item';
 import { ItemCard, SkillCard } from '@/app/_components/cards';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ActionChat, BuffChat, DebuffChat, MyChat, OpponentChat, ResultChat, SystemChat } from './chats';
 
 export function BattleSection({ activeCharacter }: { activeCharacter: Character }) {
     // Move the character and calculate the skill's range
@@ -351,7 +352,7 @@ export function ChatSidebar({ character }: { character: Character }) {
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Chat' }, (payload) => {
                 const newChat = payload.new as Chat;
                 if (newChat.roomId === battleId) {
-                    setChats((prevChats) => [newChat, ...prevChats]);
+                    setChats((prevChats) => [...prevChats, newChat]);
                 }
             })
             .subscribe();
@@ -362,7 +363,6 @@ export function ChatSidebar({ character }: { character: Character }) {
     }, [battleId]);
 
     const handleSendChat = async () => {
-        console.log('handleSendChat!');
         if (text.trim() !== '') {
             const newChat: ChatBody = {
                 roomId: battleId,
@@ -380,17 +380,43 @@ export function ChatSidebar({ character }: { character: Character }) {
         }
     };
 
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [chats]);
+
     return (
         <div className="bg-[#101010] relative h-full">
-            <div className="overflow-y-auto h-[calc(100vh-116px)] py-4 flex flex-col gap-1"></div>
+            <div className="overflow-y-auto h-[calc(100vh-116px)] py-4 flex flex-col gap-1" ref={chatContainerRef}>
+                {chats.map((chat) => {
+                    if (chat.sender === character.name) {
+                        return <MyChat key={chat.id} chat={chat} />;
+                    } else if (chat.chatType === 'Chat') {
+                        return <OpponentChat key={chat.id} chat={chat} />;
+                    } else if (chat.chatType === 'Result') {
+                        return <ResultChat key={chat.id} chat={chat} />;
+                    } else if (chat.chatType === 'Action') {
+                        return <ActionChat key={chat.id} chat={chat} />;
+                    } else if (chat.chatType === 'System') {
+                        return <SystemChat key={chat.id} chat={chat} />;
+                    } else if (chat.chatType === 'Buff') {
+                        return <BuffChat key={chat.id} chat={chat} />;
+                    } else if (chat.chatType === 'Debuff') {
+                        return <DebuffChat key={chat.id} chat={chat} />;
+                    }
+                })}
+            </div>
             <div className="absolute bottom-0 w-full p-3">
-                <Textarea
-                    className="bg-middle-red border-middle-red resize-none h-[100px]"
+                <textarea
+                    value={text}
+                    className="bg-middle-red border-middle-red resize-none h-[100px] w-full rounded-md p-3 focus:outline-none"
                     onChange={(e) => {
                         setText(e.target.value);
                     }}
                     onKeyDown={(e) => {
-                        console.log('');
                         if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
                             handleSendChat();

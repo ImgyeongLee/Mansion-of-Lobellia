@@ -41,7 +41,7 @@ export default async function BattlePage() {
             <div className="grid grid-rows-[1fr_7fr_1.5fr] h-screen w-full overflow-hidden">
                 <BattleSection activeCharacter={character} />
             </div>
-            <ChatSidebar />
+            <ChatSidebar character={character} />
         </section>
     );
 }

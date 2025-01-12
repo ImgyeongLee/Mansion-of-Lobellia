@@ -2,7 +2,7 @@ import { supabase } from '../supabase/client';
 
 export async function createUser(sub: string, email: string, name: string) {
     try {
-        const { error } = await supabase.from('User').upsert([{ id: sub, email: email, name: name, isAdmin: false }]);
+        const { error } = await supabase.from('User').insert([{ id: sub, email: email, name: name, isAdmin: false }]);
         if (error) {
             throw error;
         }
