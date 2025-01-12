@@ -3,19 +3,23 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Character } from '@/static/types/character';
+import { Character, CharacterSkill } from '@/static/types/character';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ChevronDown, Skull } from 'lucide-react';
-import { BattleRoom, Chat } from '@/static/types/battle';
+import { BattleRoom, Chat, ChatBody } from '@/static/types/battle';
 import { Entity } from '@/static/types/monster';
 import { ubuntu } from '@/static/fonts';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/db/supabase/client';
-import { getChats } from '@/lib/db/actions/chat';
+import { createChat, getChats } from '@/lib/db/actions/chat';
 import { getCharactersByRoomId } from '@/lib/db/actions/characters';
 import { getEntitiesByRoomId } from '@/lib/db/actions/entity';
+import { Item } from '@/static/types/item';
+import { getCharacterInventory } from '@/lib/db/actions/inventory';
+import { ItemCard, SkillCard } from '@/app/_components/cards';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function BattleSection({ activeCharacter }: { activeCharacter: Character }) {
     // Move the character and calculate the skill's range
@@ -143,101 +147,34 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                     ))}
                 </div>
             </section>
-            <UserMenuBar />
+            <UserMenuBar character={activeCharacter} />
         </>
     );
 }
 
 export function InfoSidebar() {
-    return (
-        <nav className="bg-bright-red flex flex-col text-xl py-8">
-            <div className="flex flex-col">
-                <div>User Info section</div>
-                <div>Monster Info section</div>
-            </div>
-            <div className="flex flex-col mt-6">
-                <div
-                    className="hover:bg-middle-red px-6 py-2 transition ease-in-out hover:cursor-pointer"
-                    onClick={() => {
-                        console.log('??');
-                    }}>
-                    Leave
-                </div>
-            </div>
-        </nav>
-    );
-}
-
-export function ChatSidebar() {
-    const [chats, setChats] = useState<Chat[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const { roomId } = useParams<{ roomId: string }>();
-
-    const fetchChats = async () => {
-        try {
-            const result = await getChats(roomId);
-            if (result.success && result.chats) {
-                setChats(result.chats);
-            } else {
-                throw new Error('Failed to fetch chats from getChats function');
-            }
-        } catch (error) {
-            console.error('Failed to fetch chats:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchChats();
-        const channel = supabase
-            .channel('public:chat')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Chat' }, (payload) => {
-                const newChat = payload.new as Chat;
-                if (newChat.roomId === roomId) {
-                    setChats((prevChats) => [newChat, ...prevChats]);
-                }
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [roomId]);
-
-    return (
-        <div className="bg-[#101010] relative h-full">
-            <div className="overflow-y-auto h-[calc(100vh-116px)] py-4 flex flex-col gap-1"></div>
-            <div className="bg-bright-red absolute bottom-0 w-full p-3">
-                <Textarea className="bg-middle-red border-middle-red resize-none h-[100px]" />
-            </div>
-        </div>
-    );
-}
-
-export function UserMenuBar() {
     const [characters, setCharacters] = useState<Character[]>([]);
     const [entities, setEntities] = useState<Entity[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const { roomId } = useParams<{ roomId: string }>();
+    const { battleId } = useParams<{ battleId: string }>();
 
     useEffect(() => {
-        if (!roomId) return;
+        if (!battleId) return;
 
         const fetchInitialData = async () => {
+            console.log('FETCH INITIAL DATA WITH ROOMCODE: ', battleId);
             setLoading(true);
 
             try {
-                const charactersResult = await getCharactersByRoomId(roomId);
-                const entitiesResult = await getEntitiesByRoomId(roomId);
+                const charactersResult = await getCharactersByRoomId(battleId);
+                const entitiesResult = await getEntitiesByRoomId(battleId);
 
                 if (charactersResult.success && charactersResult.characters) setCharacters(charactersResult.characters);
                 if (entitiesResult.success && entitiesResult.entities) setEntities(entitiesResult.entities);
             } catch (error) {
                 console.error('Failed to fetch initial data:', error);
-            } finally {
-                setLoading(false);
             }
+            setLoading(false);
         };
 
         fetchInitialData();
@@ -296,23 +233,302 @@ export function UserMenuBar() {
             supabase.removeChannel(characterSubscription);
             supabase.removeChannel(entitySubscription);
         };
-    }, [roomId]);
+    }, [battleId]);
+
+    return (
+        <nav className="bg-[#101010] flex flex-col text-xl py-8 relative select-none">
+            <div className="flex flex-col">
+                <div className="text-2xl text-center mb-3">Info</div>
+                <Image
+                    src={'/simple-decorative-line.svg'}
+                    alt="decorative-line"
+                    width={150}
+                    height={10}
+                    className="-mt-16 -mb-24 self-center pl-1"
+                />
+                <div className="w-full p-3 space-y-1">
+                    {characters.map((character) => (
+                        <div key={character.id} className="w-full flex flex-col bg-main-black p-3 rounded-sm">
+                            <div>{character.name}</div>
+                            <div className="flex flex-row justify-between items-center w-full">
+                                <div className="text-sm">Hp</div>
+                                <div className="w-[80%] bg-main-black border border-main-black h-5 relative">
+                                    <div
+                                        className="bg-bright-red h-full"
+                                        style={{
+                                            width: `${(character.currentHp / character.maxHp) * 100}%`,
+                                        }}></div>
+                                    <div className="absolute inset-0 flex items-center justify-center text-xs">
+                                        <span className={`${ubuntu.className}`}>
+                                            {character.currentHp} / {character.maxHp}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-row justify-between items-center w-full">
+                                <div className="text-sm">Cost</div>
+                                <div className="w-[80%] bg-main-black border border-main-black h-5 relative">
+                                    <div
+                                        className="bg-[#d4972e] h-full"
+                                        style={{
+                                            width: `${(character.currentCost / character.maxCost) * 100}%`,
+                                        }}></div>
+                                    <div className="absolute inset-0 flex items-center justify-center text-xs">
+                                        <span className={`${ubuntu.className}`}>
+                                            {character.currentCost} / {character.maxCost}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <Image
+                    src={'/simple-decorative-line.svg'}
+                    alt="decorative-line"
+                    width={150}
+                    height={10}
+                    className="-mt-14 -mb-24 self-center pl-1"
+                />
+                <div className="w-full p-3 space-y-1">
+                    {entities.map((entity) => (
+                        <div key={entity.id} className="w-full flex flex-col bg-main-black p-3 rounded-sm">
+                            <div>{entity.name}</div>
+                            <div className="flex flex-row justify-between items-center w-full">
+                                <div className="text-sm">Hp</div>
+                                <div className="w-[80%] bg-main-black border border-main-black h-5 relative">
+                                    <div
+                                        className="bg-bright-red h-full"
+                                        style={{
+                                            width: `${(entity.currentHp / entity.maxHp) * 100}%`,
+                                        }}></div>
+                                    <div className="absolute inset-0 flex items-center justify-center text-xs">
+                                        <span className={`${ubuntu.className}`}>
+                                            {entity.currentHp} / {entity.maxHp}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div
+                className="hover:bg-middle-red px-6 py-3 transition ease-in-out hover:cursor-pointer absolute bottom-0 w-full"
+                onClick={() => {
+                    console.log('??');
+                }}>
+                Leave
+            </div>
+        </nav>
+    );
+}
+
+export function ChatSidebar({ character }: { character: Character }) {
+    const [chats, setChats] = useState<Chat[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [text, setText] = useState<string>('');
+    const { battleId } = useParams<{ battleId: string }>();
+
+    const fetchChats = async () => {
+        try {
+            const result = await getChats(battleId);
+            if (result.success && result.chats) {
+                setChats(result.chats);
+            } else {
+                throw new Error('Failed to fetch chats from getChats function');
+            }
+        } catch (error) {
+            console.error('Failed to fetch chats:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchChats();
+        const channel = supabase
+            .channel('public:chat')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Chat' }, (payload) => {
+                const newChat = payload.new as Chat;
+                if (newChat.roomId === battleId) {
+                    setChats((prevChats) => [newChat, ...prevChats]);
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [battleId]);
+
+    const handleSendChat = async () => {
+        console.log('handleSendChat!');
+        if (text.trim() !== '') {
+            const newChat: ChatBody = {
+                roomId: battleId,
+                sender: character.name,
+                body: text,
+                image: character.image ? character.image : null,
+                chatType: 'Chat',
+            };
+            try {
+                await createChat(newChat);
+                setText('');
+            } catch (error) {
+                console.error('Failed to send chat:', error);
+            }
+        }
+    };
+
+    return (
+        <div className="bg-[#101010] relative h-full">
+            <div className="overflow-y-auto h-[calc(100vh-116px)] py-4 flex flex-col gap-1"></div>
+            <div className="absolute bottom-0 w-full p-3">
+                <Textarea
+                    className="bg-middle-red border-middle-red resize-none h-[100px]"
+                    onChange={(e) => {
+                        setText(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                        console.log(e.key);
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendChat();
+                        }
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
+export function UserMenuBar({ character }: { character: Character }) {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [skills, setSkills] = useState<CharacterSkill[]>([]);
+    const [items, setItems] = useState<Item[]>([]);
+    const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            setIsLoading(true);
+
+            try {
+                const itemResult = await fetch(`/api/character/${character.id}/items`);
+                const skillResult = await fetch(`/api/character/${character.id}/skills`);
+
+                if (itemResult.ok) {
+                    const characterItems = await itemResult.json();
+                    if (characterItems.data) setItems(characterItems.data);
+                }
+
+                if (skillResult.ok) {
+                    const characterSkills = await skillResult.json();
+                    if (characterSkills.data) setSkills(characterSkills.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch initial data for UserMenuBar:', error);
+            }
+            setIsLoading(false);
+        };
+
+        fetchInitialData();
+    }, []);
+
+    useEffect(() => {
+        if (!character.id) return;
+
+        const characterSubscription = supabase
+            .channel('public:character')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'Character',
+                },
+                (payload) => {
+                    if (payload.eventType === 'UPDATE') {
+                        setCurrentCharacter((prev) => (prev.id === payload.new.id ? (payload.new as Character) : prev));
+                    }
+                }
+            )
+            .subscribe();
+
+        const inventorySubscription = supabase
+            .channel('public:characterInventory')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'CharacterInventory',
+                },
+                (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        setItems((prev) => [...prev, payload.new as Item]);
+                    } else if (payload.eventType === 'UPDATE') {
+                        setItems((prev) =>
+                            prev.map((item) => (item.id === payload.new.id ? (payload.new as Item) : item))
+                        );
+                    } else if (payload.eventType === 'DELETE') {
+                        setItems((prev) => prev.filter((item) => item.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(characterSubscription);
+            supabase.removeChannel(inventorySubscription);
+        };
+    }, [character.id]);
 
     return (
         <div className="w-full px-12 h-full content-center">
-            {loading ? (
-                <div>Loading...</div>
+            {isLoading ? (
+                <Skeleton className="w-full bg-slate-600 h-16" />
             ) : (
-                <div className="w-full bg-middle-red h-16 rounded-md grid grid-cols-[1fr_2fr] self-center">
-                    <div className="w-full bg-slate-500">
-                        {characters.map((char) => (
-                            <div key={char.id}>{char.name}</div>
-                        ))}
+                <div className="w-full bg-[#101010] h-16 rounded-md grid grid-cols-[1fr_2fr] self-center">
+                    <div key={character.id} className="w-full flex flex-col p-3 rounded-sm">
+                        <div className="flex flex-row justify-between items-center w-full">
+                            <div className="text-sm">Hp</div>
+                            <div className="w-[80%] bg-main-black border border-main-black h-5 relative">
+                                <div
+                                    className="bg-bright-red h-full"
+                                    style={{
+                                        width: `${(character.currentHp / character.maxHp) * 100}%`,
+                                    }}></div>
+                                <div className="absolute inset-0 flex items-center justify-center text-xs">
+                                    <span className={`${ubuntu.className}`}>
+                                        {character.currentHp} / {character.maxHp}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-row justify-between items-center w-full">
+                            <div className="text-sm">Cost</div>
+                            <div className="w-[80%] bg-main-black border border-main-black h-5 relative">
+                                <div
+                                    className="bg-[#d4972e] h-full"
+                                    style={{
+                                        width: `${(character.currentCost / character.maxCost) * 100}%`,
+                                    }}></div>
+                                <div className="absolute inset-0 flex items-center justify-center text-xs">
+                                    <span className={`${ubuntu.className}`}>
+                                        {character.currentCost} / {character.maxCost}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="w-full bg-lime-950">
-                        {entities.map((entity) => (
-                            <div key={entity.id}>{entity.name}</div>
-                        ))}
+                    <div className="w-full bg-bright-red flex flex-row items-center gap-1 px-2">
+                        {skills.map((skill) => {
+                            return <SkillCard key={skill.id} skill={skill} />;
+                        })}
+                        {items.map((item) => {
+                            return <ItemCard key={item.id} item={item} />;
+                        })}
                     </div>
                 </div>
             )}

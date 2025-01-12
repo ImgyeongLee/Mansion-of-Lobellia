@@ -27,8 +27,17 @@ export interface Chat {
     chatType: ChatType;
 }
 
+export interface ChatBody {
+    roomId: string;
+    sender: string;
+    body: string;
+    image: string | null;
+    chatType: ChatType;
+}
+
 export interface BattleRoom {
     id: string;
+    hostId: string;
     invitationCode: string;
     size: number;
     roomName: string;

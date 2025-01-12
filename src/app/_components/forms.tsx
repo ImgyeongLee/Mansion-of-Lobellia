@@ -557,6 +557,7 @@ export function BattleRoomCreationForm({ dungeon, characterId }: BattleRoomCreat
                 body: JSON.stringify({
                     formData: {
                         ...values,
+                        hostId: characterId,
                         invitationCode: code,
                         dungeonType: dungeon.name,
                         size: dungeon.size,

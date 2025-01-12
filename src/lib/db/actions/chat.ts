@@ -1,7 +1,7 @@
-import { Chat } from '@/static/types/battle';
+import { ChatBody } from '@/static/types/battle';
 import { supabase } from '../supabase/client';
 
-export async function createChat(chat: Chat) {
+export async function createChat(chat: ChatBody) {
     const { error } = await supabase.from('Chat').insert(chat);
 
     if (error) {

@@ -100,7 +100,7 @@ export function CharacterDetailSection({ character }: CharacterDetailSectionProp
                                 <div>Cost</div>
                                 <div className="w-[80%] bg-main-black border border-main-black h-5 relative">
                                     <div
-                                        className="bg-bright-red h-full"
+                                        className="bg-[#d4972e] h-full"
                                         style={{
                                             width: `${(character.currentCost / character.maxCost) * 100}%`,
                                         }}></div>

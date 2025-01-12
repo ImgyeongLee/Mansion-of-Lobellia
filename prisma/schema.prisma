@@ -187,7 +187,7 @@ model Chat {
   createdAt       DateTime              @default(now())
   sender          String
   body            String
-  image           String
+  image           String?
   chatType        ChatType
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
@@ -278,6 +278,7 @@ model EntityInventory {
 
 model BattleRoom {
   id              String                @id @default(cuid())
+  hostId          String
   invitationCode  String                @unique
   roomName        String
   dungeonType     String
