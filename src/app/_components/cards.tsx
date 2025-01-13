@@ -63,6 +63,12 @@ export function SkillCard({ skill, isDisplay, isActive, isHighLight, onClick }: 
                     {skill.requiredCost > 0 && (
                         <div className={`${ubuntu.className}`}>Required Cost: {skill.requiredCost}</div>
                     )}
+                  {skill.type && skill.range && (
+                      <div className={`${ubuntu.className}`}>
+                        <p>Type: {skill.type}</p>
+                        <p>Range: {skill.range}</p>
+                      </div>
+                  )}
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
