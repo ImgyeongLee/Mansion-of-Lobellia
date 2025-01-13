@@ -80,33 +80,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
         },
     });
 
-    // real-time subscriptions
     useEffect(() => {
-        if (!battleId) return;
-
-        const fetchTurnQueue = async () => {
-            try {
-                const response = await fetch(`/api/battle/queue?battleId=${battleId}`);
-                const data = await response.json();
-
-                if (response.ok && data.success && data.data) {
-                    setQueue(data.data.data.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order));
-                    setCurrentTurn(queue[0]);
-                } else {
-                    throw new Error(data.error || 'Failed to fetch turn queue');
-                }
-            } catch (error) {
-                console.error('Error fetching TurnQueue:', error);
-                toast({
-                    title: 'Error',
-                    description: error instanceof Error ? error.message : 'Unknown error',
-                    variant: 'destructive',
-                });
-            }
-        };
-
-        fetchTurnQueue();
-
         const turnQueueChannel = supabase
             .channel('public:turnQueue')
             .on(
@@ -120,11 +94,11 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                 (payload) => {
                     if (payload.eventType === 'UPDATE') {
                         setQueue((prev) => {
-                            const updatedQueue = prev.map((queue) =>
-                                queue.subjectId === payload.new.subjectId ? { ...queue, ...payload.new } : queue
+                            const updatedQueue = prev.map((q) =>
+                                q.subjectId === payload.new.subjectId ? { ...q, ...payload.new } : q
                             );
-
-                            return updatedQueue.sort((a, b) => a.order - b.order);
+                            setCurrentTurn(updatedQueue.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order)[0]);
+                            return updatedQueue.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order);
                         });
                     }
                 }
@@ -192,6 +166,35 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
             supabase.removeChannel(entityChannel).catch(console.error);
             supabase.removeChannel(turnQueueChannel).catch(console.error);
         };
+    }, [battleId]);
+
+    // real-time subscriptions
+    useEffect(() => {
+        if (!battleId) return;
+
+        const fetchTurnQueue = async () => {
+            try {
+                console.log('fetching turn queue...');
+                const response = await fetch(`/api/battle/queue?battleId=${battleId}`);
+                const data = await response.json();
+
+                if (response.ok && data.success && data.data) {
+                    setQueue(data.data.data.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order));
+                    setCurrentTurn(data.data.data.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order)[0]);
+                } else {
+                    throw new Error(data.error || 'Failed to fetch turn queue');
+                }
+            } catch (error) {
+                console.error('Error fetching TurnQueue:', error);
+                toast({
+                    title: 'Error',
+                    description: error instanceof Error ? error.message : 'Unknown error',
+                    variant: 'destructive',
+                });
+            }
+        };
+
+        fetchTurnQueue();
     }, [battleId]);
 
     const handleCellClick = (rowIndex: number, colIndex: number) => {
@@ -358,7 +361,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
 
     return (
         <>
-            <div className="w-full text-xl text-center p-10 select-none">Round {roomData?.round}</div>
+            <div className="w-full text-xl text-center p-10 select-none">Current Turn: {currentTurn?.subjectId}</div>
             <section className="w-full h-full overflow-y-auto overflow-x-auto p-10">
                 <div className="flex flex-col items-center justify-center min-h-full gap-1">
                     {Array.from({ length: GRID_SIZE }).map((_, rowIndex) => (
@@ -510,6 +513,7 @@ export function InfoSidebar() {
     useEffect(() => {
         if (!battleId) return;
 
+        console.log('INFO SIDE BAR');
         const fetchInitialData = async () => {
             setLoading(true);
 
@@ -535,16 +539,15 @@ export function InfoSidebar() {
                     event: '*',
                     schema: 'public',
                     table: 'Character',
+                    filter: `roomId=eq.${battleId}`,
                 },
                 (payload) => {
-                    console.log('Realtime Character payload:', payload);
-
-                    if (payload.eventType === 'INSERT') {
-                        setCharacters((prev) => [...prev, payload.new as Character]);
-                    } else if (payload.eventType === 'UPDATE') {
+                    if (payload.eventType === 'UPDATE') {
                         setCharacters((prev) =>
-                            prev.map((char) => (char.id === payload.new.id ? (payload.new as Character) : char))
+                            prev.map((char) => (char.id === payload.new.id ? { ...char, ...payload.new } : char))
                         );
+                    } else if (payload.eventType === 'INSERT') {
+                        setCharacters((prev) => [...prev, payload.new as Character]);
                     } else if (payload.eventType === 'DELETE') {
                         setCharacters((prev) => prev.filter((char) => char.id !== payload.old.id));
                     }
