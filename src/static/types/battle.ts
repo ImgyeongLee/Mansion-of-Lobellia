@@ -58,6 +58,7 @@ export interface TurnQueue {
     id: string;
     subjectId: string;
     subjectType: 'Character' | 'Monster';
+    subjectName: string;
     order: number;
     roomId: string;
 }

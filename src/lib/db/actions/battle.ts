@@ -111,6 +111,7 @@ export async function createTurnQueue(battleRoomId: string, participants: (Entit
         const turnQueueData = sortedParticipants.map((participant, index) => ({
             roomId: battleRoomId,
             subjectId: participant.id,
+            subjectName: participant.name,
             order: index + 1,
             subjectType: 'class' in participant ? 'Character' : 'Monster',
         }));

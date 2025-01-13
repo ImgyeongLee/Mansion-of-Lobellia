@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DIRECT_URL")
 }
 
 
@@ -302,6 +302,7 @@ model TurnQueue {
   roomId          String
   subjectId       String
   subjectType     String
+  subjectName     String
   order           Int
   battleRoom      BattleRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
