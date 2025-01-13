@@ -238,8 +238,16 @@ export function BattleSection({
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
     if (skill) {
-      setTargetPosition({ rowIndex, colIndex });
-      setProceedTurnDialog(true);
+      // if clicked cell is within range
+      if (isCellInRange(rowIndex, colIndex)) {
+        setTargetPosition({ rowIndex, colIndex });
+        setProceedTurnDialog(true);
+      } else {
+        toast({
+          title: "This cell is out of range",
+          className: "w-fit max-w-[256px] absolute right-4 bottom-5",
+        })
+      }
       return;
     }
     // if the user's character has not made a move yet
