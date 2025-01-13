@@ -213,6 +213,17 @@ const SAMPLE_DUNGEON = {
 };
 
 async function main() {
+    const dungeon = await prisma.dungeon.create({
+        data: {
+            name: SAMPLE_DUNGEON.name,
+            size: SAMPLE_DUNGEON.size,
+            description: SAMPLE_DUNGEON.description,
+            difficulty: SAMPLE_DUNGEON.difficulty,
+            minMember: SAMPLE_DUNGEON.minMember,
+            maxMember: SAMPLE_DUNGEON.maxMember,
+        },
+    });
+
     for (const skill of SAMPLE_CHARACTER_SKILLS) {
         await prisma.characterSkill.create({
             data: {
@@ -245,21 +256,6 @@ async function main() {
         });
     }
 
-    for (const monster of SAMPLE_MONSTERS) {
-        await prisma.monster.create({
-            data: {
-                name: monster.name,
-                maxHp: monster.maxHp,
-                attack: monster.attack,
-                defense: monster.defense,
-                dodge: monster.dodge,
-                crit: monster.crit,
-                speed: monster.speed,
-                reward: monster.reward,
-            },
-        });
-    }
-
     for (const monsterSkill of SAMPLE_MONSTER_SKILLS) {
         await prisma.monsterSkill.create({
             data: {
@@ -272,16 +268,74 @@ async function main() {
         });
     }
 
-    await prisma.dungeon.create({
-        data: {
-            name: SAMPLE_DUNGEON.name,
-            size: SAMPLE_DUNGEON.size,
-            description: SAMPLE_DUNGEON.description,
-            difficulty: SAMPLE_DUNGEON.difficulty,
-            minMember: SAMPLE_DUNGEON.minMember,
-            maxMember: SAMPLE_DUNGEON.maxMember,
-        },
-    });
+    for (const monster of SAMPLE_MONSTERS) {
+        const newMonster = await prisma.monster.create({
+            data: {
+                name: monster.name,
+                maxHp: monster.maxHp,
+                attack: monster.attack,
+                defense: monster.defense,
+                dodge: monster.dodge,
+                crit: monster.crit,
+                speed: monster.speed,
+                reward: monster.reward,
+            },
+        });
+
+        await prisma.monsterDungeonRelation.create({
+            data: {
+                dungeonId: dungeon.id,
+                monsterId: newMonster.id,
+            },
+        });
+
+        if (newMonster.name == 'Skeleton Soldier') {
+            const clumsyAttack = await prisma.monsterSkill.findFirst({
+                where: {
+                    name: 'Clumsy Attack',
+                },
+            });
+
+            if (clumsyAttack) {
+                await prisma.monsterSkillRelation.create({
+                    data: {
+                        monsterId: newMonster.id,
+                        skillId: clumsyAttack.id,
+                    },
+                });
+            }
+        } else if (newMonster.name == 'Skeleton Mage') {
+            const clumsyHeal = await prisma.monsterSkill.findFirst({
+                where: {
+                    name: 'Clumsy Heal',
+                },
+            });
+
+            if (clumsyHeal) {
+                await prisma.monsterSkillRelation.create({
+                    data: {
+                        monsterId: newMonster.id,
+                        skillId: clumsyHeal.id,
+                    },
+                });
+            }
+
+            const moraleBoost = await prisma.monsterSkill.findFirst({
+                where: {
+                    name: 'Morale Boost',
+                },
+            });
+
+            if (moraleBoost) {
+                await prisma.monsterSkillRelation.create({
+                    data: {
+                        monsterId: newMonster.id,
+                        skillId: moraleBoost.id,
+                    },
+                });
+            }
+        }
+    }
 }
 
 main()

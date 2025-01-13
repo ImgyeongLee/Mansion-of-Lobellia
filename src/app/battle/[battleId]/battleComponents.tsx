@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ChevronDown, Skull } from 'lucide-react';
-import { BattleRoom, Chat, ChatBody } from '@/static/types/battle';
+import { BattleRoom, Chat, ChatBody, TurnQueue } from '@/static/types/battle';
 import { Entity } from '@/static/types/monster';
 import { ubuntu } from '@/static/fonts';
 import { supabase } from '@/lib/db/supabase/client';
@@ -30,6 +30,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ActionChat, BuffChat, DebuffChat, MyChat, OpponentChat, ResultChat, SystemChat } from './chats';
+import { handleCharacterAction } from '@/lib/handlers/characterSkillHandler';
 
 export function BattleSection({ activeCharacter }: { activeCharacter: Character }) {
     const { toast } = useToast();
@@ -39,11 +40,27 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
     const [characters, setCharacters] = useState<Character[]>([]);
     const [entities, setEntities] = useState<Entity[]>([]);
     const [showDialog, setShowDialog] = useState<boolean>(false);
+    const [proceedTurnDialog, setProceedTurnDialog] = useState<boolean>(false);
+    const [queue, setQueue] = useState<TurnQueue[]>([]);
+    const [skill, setSkill] = useState<CharacterSkill>();
+    const [currentTurn, setCurrentTurn] = useState<TurnQueue>();
     const [targetPosition, setTargetPosition] = useState<{
         rowIndex: number;
         colIndex: number;
     } | null>(null);
     const GRID_SIZE = 10;
+
+    const isActive = () => {
+        if (
+            currentCharacter.isDead ||
+            (currentCharacter.hasMoved && currentCharacter.hasActioned) ||
+            (currentTurn && currentCharacter.id != currentTurn.subjectId)
+        ) {
+            return false;
+        }
+
+        return true;
+    };
 
     const { data: roomData } = useQuery({
         queryKey: [battleId],
@@ -66,6 +83,53 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
     // real-time subscriptions
     useEffect(() => {
         if (!battleId) return;
+
+        const fetchTurnQueue = async () => {
+            try {
+                const response = await fetch(`/api/battle/queue?battleId=${battleId}`);
+                const data = await response.json();
+
+                if (response.ok && data.success && data.data) {
+                    setQueue(data.data.data.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order));
+                    setCurrentTurn(queue[0]);
+                } else {
+                    throw new Error(data.error || 'Failed to fetch turn queue');
+                }
+            } catch (error) {
+                console.error('Error fetching TurnQueue:', error);
+                toast({
+                    title: 'Error',
+                    description: error instanceof Error ? error.message : 'Unknown error',
+                    variant: 'destructive',
+                });
+            }
+        };
+
+        fetchTurnQueue();
+
+        const turnQueueChannel = supabase
+            .channel('public:turnQueue')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'TurnQueue',
+                    filter: `roomId=eq.${battleId}`,
+                },
+                (payload) => {
+                    if (payload.eventType === 'UPDATE') {
+                        setQueue((prev) => {
+                            const updatedQueue = prev.map((queue) =>
+                                queue.subjectId === payload.new.subjectId ? { ...queue, ...payload.new } : queue
+                            );
+
+                            return updatedQueue.sort((a, b) => a.order - b.order);
+                        });
+                    }
+                }
+            )
+            .subscribe();
 
         // character subscription
         const characterChannel = supabase
@@ -126,10 +190,16 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
         return () => {
             supabase.removeChannel(characterChannel).catch(console.error);
             supabase.removeChannel(entityChannel).catch(console.error);
+            supabase.removeChannel(turnQueueChannel).catch(console.error);
         };
     }, [battleId]);
 
     const handleCellClick = (rowIndex: number, colIndex: number) => {
+        if (skill) {
+            setTargetPosition({ rowIndex, colIndex });
+            setProceedTurnDialog(true);
+            return;
+        }
         // if the user's character has not made a move yet
         if (!activeCharacter.hasMoved) {
             setTargetPosition({ rowIndex, colIndex });
@@ -139,6 +209,96 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
         console.log([rowIndex, colIndex]);
         const isActiveCharacter = activeCharacter.colPos === colIndex && activeCharacter.rowPos === rowIndex;
         if (!isActiveCharacter) return;
+    };
+
+    const useSkill = async () => {
+        const targetEntity = entities.filter(
+            (entity) => entity.colPos === targetPosition?.colIndex && entity.rowPos === targetPosition.rowIndex
+        )[0];
+        const targetCharacter = characters.filter(
+            (character) => character.colPos === targetPosition?.colIndex && character.rowPos === targetPosition.rowIndex
+        )[0];
+
+        const targetEntities = [targetEntity];
+        const targetCharacters = [targetCharacter];
+
+        try {
+            if (!skill) return;
+            await handleCharacterAction(currentCharacter, skill, targetEntities, targetCharacters);
+            await fetch('/api/character/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    formData: {
+                        ...currentCharacter,
+                    },
+                }),
+            });
+            if (targetEntities.length > 0) {
+                console.log('TARGET ENTITY = ', targetEntities);
+                Promise.all(
+                    targetEntities.map(async (entity) => {
+                        if (entity) {
+                            const { skills, items, createdAt, ...otherData } = entity;
+                            await fetch('/api/entity/update', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    formData: {
+                                        ...otherData,
+                                    },
+                                }),
+                            });
+                        }
+                    })
+                );
+            }
+            if (targetCharacters.length > 0) {
+                Promise.all(
+                    targetCharacters.map(async (character) => {
+                        if (character) {
+                            const { skills, inventory, createdAt, ...otherData } = character;
+                            await fetch('/api/character/update', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    formData: {
+                                        ...otherData,
+                                    },
+                                }),
+                            });
+                        }
+                    })
+                );
+            }
+
+            await fetch('/api/battle/process-round', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    battleId: battleId,
+                }),
+            });
+            setProceedTurnDialog(false);
+            setSkill(undefined);
+        } catch (error) {
+            console.error('Error with using character skill: ', error);
+            toast({
+                title: 'Failed to use skill',
+                description: error instanceof Error ? error.message : 'Unknown error',
+                variant: 'destructive',
+            });
+            setProceedTurnDialog(false);
+            setSkill(undefined);
+        }
     };
 
     const movePlayer = async () => {
@@ -316,13 +476,25 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                     ))}
                 </div>
             </section>
-            <UserMenuBar character={currentCharacter} />
+            <UserMenuBar character={currentCharacter} isActive={isActive()} setSkill={setSkill} currentSkill={skill} />
             {showDialog && (
                 <Dialog
                     title={'Set your character position here?'}
                     description={'This action cannot be undone.'}
                     onCancel={() => setShowDialog(false)}
                     onContinue={movePlayer}
+                />
+            )}
+            {proceedTurnDialog && (
+                <Dialog
+                    title={
+                        skill
+                            ? `You are going to use ${skill.name} skill.`
+                            : `You are not going to do anything for this turn.`
+                    }
+                    description={'Do you want to finish your turn? This action cannot be undone.'}
+                    onCancel={() => setProceedTurnDialog(false)}
+                    onContinue={useSkill}
                 />
             )}
         </>
@@ -339,7 +511,6 @@ export function InfoSidebar() {
         if (!battleId) return;
 
         const fetchInitialData = async () => {
-            console.log('FETCH INITIAL DATA WITH ROOMCODE: ', battleId);
             setLoading(true);
 
             try {
@@ -606,7 +777,17 @@ export function ChatSidebar({ character }: { character: Character }) {
     );
 }
 
-export function UserMenuBar({ character }: { character: Character }) {
+export function UserMenuBar({
+    character,
+    isActive,
+    setSkill,
+    currentSkill,
+}: {
+    character: Character;
+    isActive: boolean;
+    setSkill: (skill: CharacterSkill | undefined) => void;
+    currentSkill: CharacterSkill | undefined;
+}) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [skills, setSkills] = useState<CharacterSkill[]>([]);
     const [items, setItems] = useState<Item[]>([]);
@@ -708,7 +889,21 @@ export function UserMenuBar({ character }: { character: Character }) {
                     </div>
                     <div className="w-full bg-bright-red flex flex-row items-center gap-1 px-2">
                         {skills.map((skill) => {
-                            return <SkillCard key={skill.id} skill={skill} />;
+                            return (
+                                <SkillCard
+                                    key={skill.id}
+                                    skill={skill}
+                                    isActive={isActive}
+                                    isHighLight={currentSkill ? skill.id == currentSkill.id : false}
+                                    onClick={() => {
+                                        if (!currentSkill || currentSkill.id != skill.id) {
+                                            setSkill(skill);
+                                        } else if (currentSkill.id == skill.id) {
+                                            setSkill(undefined);
+                                        }
+                                    }}
+                                />
+                            );
                         })}
                         {items.map((item) => {
                             return <ItemCard key={item.id} item={item} />;

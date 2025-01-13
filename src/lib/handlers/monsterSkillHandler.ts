@@ -20,6 +20,10 @@ export async function handleAIResponse(
                 targetCharacters.forEach((character) => {
                     const entityDamage = calculateEntityAttackAmount(entity, 1, character);
                     character.currentHp -= entityDamage;
+                    if (character.currentHp <= 0) {
+                        character.isDead = true;
+                        character.currentHp = 0;
+                    }
                 });
             }
         } else if (skill.name == 'Clumsy Heal') {

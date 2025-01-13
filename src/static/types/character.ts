@@ -1,4 +1,5 @@
 export type CharacterClass = 'Gladiolus' | 'Saintpaulia' | 'Cypress' | 'Blackthorn';
+export type SkillType = 'General' | 'Gladiolus' | 'Saintpaulia' | 'Cypress' | 'Blackthorn';
 
 type SkillRange = 'Self' | 'Narrow' | 'Normal' | 'Wide';
 
@@ -7,8 +8,13 @@ export interface CharacterSkill {
     name: string;
     image: string | null;
     description: string | null;
-    type: string;
+    type: SkillType;
     range: SkillRange;
+    isAllyTargeting: boolean;
+    isEnemyTargeting: boolean;
+    isSelfTargeting: boolean;
+    isEntire: boolean;
+    isUltimate: boolean;
     requiredCost: number;
     requiredHp: number;
 }

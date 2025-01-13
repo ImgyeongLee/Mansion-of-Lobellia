@@ -27,10 +27,11 @@ interface SkillCardProps {
     skill: CharacterSkill;
     isDisplay?: boolean;
     isHighLight?: boolean;
+    isActive?: boolean;
     onClick?: () => void;
 }
 
-export function SkillCard({ skill, isDisplay, isHighLight, onClick }: SkillCardProps) {
+export function SkillCard({ skill, isDisplay, isActive, isHighLight, onClick }: SkillCardProps) {
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -41,7 +42,8 @@ export function SkillCard({ skill, isDisplay, isHighLight, onClick }: SkillCardP
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger>
-                    <div
+                    <Button
+                        disabled={isActive ? !isActive : false}
                         onClick={handleClick}
                         className={cn(
                             'bg-wine-red p-2 w-[50px] h-[50px] rounded-sm text-center flex flex-col justify-center hover:scale-105 ease-in-out trnasition',
@@ -50,7 +52,7 @@ export function SkillCard({ skill, isDisplay, isHighLight, onClick }: SkillCardP
                                 'border-none': !isHighLight,
                                 'bg-black': isDisplay,
                             }
-                        )}></div>
+                        )}></Button>
                 </TooltipTrigger>
                 <TooltipContent className={cn('bg-black w-[150px] flex flex-col')}>
                     <div className="text-center text-lg">{skill.name}</div>

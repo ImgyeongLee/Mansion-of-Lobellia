@@ -53,3 +53,11 @@ export interface BattleRoom {
     participants: Character[];
     entities: Entity[];
 }
+
+export interface TurnQueue {
+    id: string;
+    subjectId: string;
+    subjectType: 'Character' | 'Monster';
+    order: number;
+    roomId: string;
+}

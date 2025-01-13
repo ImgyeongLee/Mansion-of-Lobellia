@@ -14,11 +14,19 @@ export async function handleCharacterAction(
             if (targetEntities) {
                 targetEntities.forEach((entity: Entity) => {
                     entity.currentHp -= calculateCharacterAttackAmount(character, 1, entity);
+                    if (entity.currentHp <= 0) {
+                        entity.currentHp = 0;
+                        entity.isDead = true;
+                    }
                 });
             }
         } else if (skill.name == 'Strike') {
             if (targetEntities) {
                 targetEntities[0].currentHp -= calculateCharacterAttackAmount(character, 1.3, targetEntities[0]);
+                if (targetEntities[0].currentHp <= 0) {
+                    targetEntities[0].currentHp = 0;
+                    targetEntities[0].isDead = true;
+                }
             }
         } else if (skill.name == 'Adrenaline') {
             character.attackBuffedAmount = 30;
@@ -30,6 +38,10 @@ export async function handleCharacterAction(
             if (targetEntities) {
                 targetEntities[0].currentHp -= calculateCharacterAttackAmount(character, 3, targetEntities[0]);
                 character.isStun = true;
+                if (targetEntities[0].currentHp <= 0) {
+                    targetEntities[0].currentHp = 0;
+                    targetEntities[0].isDead = true;
+                }
             }
         } else if (skill.name == 'First Aid') {
             if (targetCharacters) {

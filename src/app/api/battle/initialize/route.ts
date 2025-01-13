@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
             data: {
                 rowPos: rowIndex,
                 colPos: colIndex,
-                hasMoved: true,
             },
         });
 
