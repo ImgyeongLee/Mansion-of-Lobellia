@@ -193,7 +193,13 @@ function MonsterCard({ monster }: MonsterCardProps) {
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger>
-                    <div className="bg-wine-red p-2 w-[50px] h-[50px] rounded-sm text-center flex flex-col justify-center hover:scale-105 ease-in-out trnasition"></div>
+                    <div
+                        className="bg-wine-red p-2 w-[50px] h-[50px] rounded-sm text-center flex flex-col justify-center hover:scale-105 ease-in-out trnasition"
+                        style={{
+                            backgroundImage: monster.image ? `url(${monster.image})` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}></div>
                 </TooltipTrigger>
                 <TooltipContent className={cn('bg-black w-[150px] flex flex-col text-center')}>
                     <div className="text-center text-base leading-tight">{monster.name}</div>

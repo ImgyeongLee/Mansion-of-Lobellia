@@ -192,6 +192,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                     const data = await result.json();
                     if (data.body) {
                         const actualData = JSON.parse(data.body);
+                        console.log('ACTUAL DATA == ', actualData);
                         const action = actualData.actions.find(
                             (action: AIResponse) => action.entityId === currentTurn?.subjectId
                         );
@@ -209,7 +210,13 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                             const targetCharacters = characters.filter(
                                                 (character) => action.targetId[0] === character.id
                                             );
-                                            await handleAIResponse(action, activeEntity, skill, targetCharacters);
+                                            await handleAIResponse(
+                                                battleId,
+                                                action,
+                                                activeEntity,
+                                                skill,
+                                                targetCharacters
+                                            );
                                         }
                                     } else {
                                         if (action.targetId.length > 0) {
@@ -218,6 +225,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                             );
                                             console.log('ACTION IS == ', targetEntities);
                                             await handleAIResponse(
+                                                battleId,
                                                 action,
                                                 activeEntity,
                                                 skill,
@@ -560,10 +568,10 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                     <TooltipProvider key={cellKey}>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Button
+                                                <div
                                                     onClick={() => handleCellClick(rowIndex, colIndex)}
                                                     className={cn(
-                                                        'w-[50px] h-[50px] rounded-none transition-colors duration-300',
+                                                        'w-[50px] h-[50px] rounded-none transition-colors duration-300 hover:cursor-pointer',
                                                         {
                                                             'bg-[#5C595D]': !isInRange,
                                                             'bg-yellow-500 hover:bg-yellow-600': isInRange,
@@ -589,8 +597,8 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                                                                 '/placeholderAvatar.webp'
                                                                             }
                                                                             alt="icon"
-                                                                            width={100}
-                                                                            height={100}
+                                                                            width={120}
+                                                                            height={120}
                                                                         />
                                                                     );
                                                                 }
@@ -624,7 +632,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                                                             <Tooltip>
                                                                                 <TooltipTrigger asChild>
                                                                                     {character.isDead ? (
-                                                                                        <Skull className="text-litania-red" />
+                                                                                        <Skull className="text-bright-red" />
                                                                                     ) : (
                                                                                         <Image
                                                                                             src={
@@ -648,7 +656,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                                             })}
                                                         </div>
                                                     )}
-                                                </Button>
+                                                </div>
                                             </TooltipTrigger>
                                             <TooltipContent className="bg-black bg-opacity-80">
                                                 <span className={`${ubuntu.className} text-main-white`}>

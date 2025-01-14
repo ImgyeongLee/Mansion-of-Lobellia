@@ -125,8 +125,13 @@ export function CharacterInventory({ characterId }: { characterId: string }) {
             variants={appearsFromLeftFadeIn}
             initial="initial"
             animate="animate"
-            className="bg-wine-red p-5 h-full rounded-md">
-            <div className="bg-middle-red p-2 h-full">
+            className="bg-wine-red p-5 h-full rounded-md"
+            style={{
+                backgroundImage: `url('https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/texture.webp')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}>
+            <div className="bg-[#070912] p-2 h-full rounded-md">
                 <div className="flex flex-row gap-2">
                     {items &&
                         items.length > 0 &&
@@ -150,20 +155,24 @@ export function StoreSection({ storeItems, characterId }: { storeItems: Item[]; 
                 initial="initial"
                 animate="animate"
                 className="h-full grid grid-cols-[1fr_1.5fr]">
-                <div className="bg-bright-red h-full p-5">
-                    <div className="bg-middle-red h-full p-3">
-                        <div className="flex flex-row gap-2">
-                            {storeItems.length > 0 &&
-                                storeItems.map((item) => (
-                                    <StoreItemCard
-                                        key={item.id}
-                                        item={item}
-                                        characterId={characterId || ''}></StoreItemCard>
-                                ))}
-                        </div>
+                <div className="bg-[#1c1b2b] h-full p-5">
+                    <div className="flex flex-row gap-2">
+                        {storeItems.length > 0 &&
+                            storeItems.map((item) => (
+                                <StoreItemCard
+                                    key={item.id}
+                                    item={item}
+                                    characterId={characterId || ''}></StoreItemCard>
+                            ))}
                     </div>
                 </div>
-                <div className="bg-amber-800 h-full"></div>
+                <div
+                    className="bg-amber-800 h-full"
+                    style={{
+                        backgroundImage: `url('https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/store.webp')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}></div>
             </motion.div>
             <CharacterInventory characterId={characterId as string} />
         </div>

@@ -121,7 +121,17 @@ export async function getCharactersByRoomId(roomId: string) {
 
 export async function leaveBattleRoom(characterId: string, roomId: string) {
     try {
-        const { data, error } = await supabase.from('Character').update({ roomId: null }).eq('id', characterId);
+        const { data, error } = await supabase
+            .from('Character')
+            .update({
+                roomId: null,
+                rowPos: -1,
+                colPos: -1,
+                hasMoved: false,
+                hasActioned: false,
+                hasUsedUltimate: false,
+            })
+            .eq('id', characterId);
 
         if (error) {
             console.error('Error leaving battle room:', error);

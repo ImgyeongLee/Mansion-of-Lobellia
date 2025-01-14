@@ -14,6 +14,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 6,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/Swing.webp',
     },
     {
         name: 'Strike',
@@ -27,6 +28,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 5,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/Strike.webp',
     },
     {
         name: 'Adrenaline',
@@ -40,6 +42,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 7,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/Adrenaline.webp',
     },
     {
         name: 'Defensive Stance',
@@ -53,6 +56,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 7,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/defensive_stance.webp',
     },
     {
         name: 'Vibrating Smash',
@@ -66,6 +70,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: true,
         requiredCost: 15,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/vibratingSmash.webp',
     },
     {
         name: 'First Aid',
@@ -79,6 +84,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 6,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/FirstAid.webp',
     },
     {
         name: 'Inspire',
@@ -92,6 +98,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 8,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/inspire.webp',
     },
     {
         name: 'Resurrection',
@@ -105,6 +112,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: true,
         requiredCost: 20,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/resurrection.webp',
     },
     {
         name: 'Guardian',
@@ -118,6 +126,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 10,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/Guardian.webp',
     },
     {
         name: 'Focus',
@@ -131,6 +140,7 @@ const SAMPLE_CHARACTER_SKILLS = [
         isUltimate: false,
         requiredCost: 18,
         requiredHp: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/focus.webp',
     },
 ];
 
@@ -165,6 +175,7 @@ const SAMPLE_MONSTERS = [
         crit: 5,
         speed: 6,
         reward: 10,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/skeletonSoldier.png',
     },
     {
         name: 'Skeleton Mage',
@@ -175,6 +186,7 @@ const SAMPLE_MONSTERS = [
         crit: 5,
         speed: 8,
         reward: 10,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/skeletonMage.png',
     },
 ];
 
