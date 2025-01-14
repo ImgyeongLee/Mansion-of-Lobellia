@@ -1,30 +1,42 @@
 
-# Mansion of Lobellia
+# The Mansion of Lobellia
 
-A turn-based tactical RPG platform built with Next.js and AWS services.
+![The_mansion_of_lobellia2](https://github.com/user-attachments/assets/d728f30e-1f2d-4941-b733-7198e812e9c3)
+**Blessings come from curses. Bear this in mind. Be with your creed.**
+
+A turn-based tactical RPG platform built with Next.js and AWS services. Submission for AWS Game Builder Hackathon.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 - Node.js (v18 or higher)
 - npm, yarn, or pnpm
-- PostgreSQL database
+- Prisma
 - AWS account with appropriate credentials
 
 ## Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Referring to our `.env.sample` file, create your `.env` file in the root directory with the following variables:
 
 ```
-# Database
-DIRECT_URL="your_postgresql_connection_string"
+NEXT_PUBLIC_SUPABASE_URL=""
+NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+NEXT_PUBLIC_SUPABASE_SERVICE_KEY=""
+DATABASE_URL=""
+DIRECT_URL=""
 
-# AWS Cognito
-NEXT_PUBLIC_USER_POOL_ID="your_cognito_user_pool_id"
-NEXT_PUBLIC_USER_POOL_CLIENT_ID="your_cognito_user_pool_client_id"
+NEXT_PUBLIC_REGION=""
+NEXT_PUBLIC_USER_POOL_ID=""
+NEXT_PUBLIC_USER_POOL_CLIENT_ID=""
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+JWT_SECRET=""
 
-# OpenAI (for Lambda function)
-OPENAI_KEY="your_openai_api_key"
+NEXT_PUBLIC_S3_REGION=""
+NEXT_PUBLIC_ACCESS_KEY=""
+NEXT_PUBLIC_SECRET_ACCESS_KEY=""
+NEXT_PUBLIC_S3_NAME=""
+
+LAMBDA_FUNCTION_URI=""
 ```
 
 ## Installation
@@ -132,11 +144,13 @@ mansion-of-lobellia/
 - **Frontend**: Next.js, TailwindCSS, shadcn/ui
 - **Backend**: AWS Lambda, PostgreSQL
 - **ORM**: Prisma
-- **Authentication**: AWS Cognito
+- **Authentication**: AWS Cognito with AWS Amplify SDK
 - **AI Integration**: OpenAI GPT-4
 - **State Management**: Zustand
 - **API Layer**: TanStack Query
+- **Image Store**: AWS S3 Bucket
+- **AI Coding Assistant**: AWS Q Developer
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The Mansion of Lobellia is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
