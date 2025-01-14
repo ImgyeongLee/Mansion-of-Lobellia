@@ -227,13 +227,25 @@ export function ItemCard({ item, amount, children }: ItemCardProps) {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <div className="cursor-pointer w-[50px] h-[50px] rounded-sm bg-black hover:scale-105 transition ease-in-out">
+                <div
+                    className="cursor-pointer w-[50px] h-[50px] rounded-sm bg-black hover:scale-105 transition ease-in-out"
+                    style={{
+                        backgroundImage: item.image ? `url(${item.image})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}>
                     <div className=""></div>
                 </div>
             </DialogTrigger>
             <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[400px] min-w-[320px]">
                 <div className="flex flex-col justify-center w-full items-center">
-                    <div className="bg-slate-700 w-[100px] h-[100px] mb-4"></div>
+                    <div
+                        className="bg-slate-700 w-[100px] h-[100px] mb-4"
+                        style={{
+                            backgroundImage: item.image ? `url(${item.image})` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}></div>
                     <Image
                         src={'/simple-decorative-line.svg'}
                         alt="decorative-line"

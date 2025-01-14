@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { SignInButton } from '../buttons';
 
 export default function Hero() {
@@ -7,8 +8,8 @@ export default function Hero() {
                 <nav className="flex flex-row justify-end">
                     <SignInButton />
                 </nav>
-                <div className="text-[calc(20px+2vw)] cursor-default">The Mansion of Lobellia</div>
-                <div className="text-[calc(8px+1vw)] -m-2 cursor-default">Be with your creed</div>
+                <Image src={'/logo.webp'} alt="hero" width={1500} height={1500} />
+                <div className="text-[calc(8px+1vw)] -m-64 cursor-default">Be with your creed</div>
             </section>
         </main>
     );

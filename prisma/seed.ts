@@ -153,6 +153,7 @@ const SAMPLE_ITEMS = [
         isStoreItem: true,
         hpRecovery: 15,
         costRecovery: 0,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/hppotion.webp',
     },
     {
         name: 'Beginner Energy Recovery Potion',
@@ -162,6 +163,7 @@ const SAMPLE_ITEMS = [
         isStoreItem: true,
         hpRecovery: 0,
         costRecovery: 15,
+        image: 'https://the-mansion-of-lobellia.s3.us-east-1.amazonaws.com/costpotion.webp',
     },
 ];
 
