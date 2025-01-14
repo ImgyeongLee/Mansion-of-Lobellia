@@ -6,7 +6,6 @@ const openai = new OpenAI({
 
 export const handler = async (event) => {
   try {
-    // const body = JSON.parse(event.body || '{}');
     const battleState = JSON.parse(event.body || '{}');
 
     if (!battleState.roomId || !battleState.entities || !battleState.characters) {
@@ -48,12 +47,20 @@ Strategic Considerations:
 4. Consider moving away from low HP
 5. Don't move if already in optimal position
 
+Target Selection Rules:
+1. Cannot target dead monsters with any skills
+2. Cannot target dead characters with any skills
+3. Support skills (healing/buffs) should only target living allies
+4. Damage skills should only target living enemies
+5. Consider HP percentages when choosing healing targets
+
 Other Important Rules:
 1. Cannot move to occupied positions
 2. Only use skills from monster's skill list
 3. One action per monster per turn
-4. Support skills (healing/buffs) should target allies
-5. Consider monster and target HP when choosing actions
+4. Dead monsters cannot take actions
+5. Support skills (healing/buffs) should target allies
+6. Consider monster and target HP when choosing actions
 
 Provide a JSON response in this format:
 {
@@ -78,9 +85,7 @@ ${m.name} (ID: ${m.id})
 - Position: (${m.rowPos}, ${m.colPos})
 - Attack: ${m.attack}, Defense: ${m.defense}
 - Status: ${getStatusEffects(m)}
-- Skills: ${m.skills.map(s =>
-        `${s.skill.name} (ID: ${s.skill.id}, Range: ${s.skill.range})`
-    ).join(', ')}
+- Skills: ${m.skills.map(s => `${s.name} (ID: ${s.id}, Range: ${s.range})`).join(', ')}
 `).join('\n')}
 
 Characters:
@@ -95,6 +100,7 @@ Tactical Considerations:
 - Support monsters should prioritize healing allies below 50% HP
 - Consider moving to flank characters
 - Maintain safe distance for ranged attackers
+- Do not target dead units with any skills
 - Group similar monster types together for better synergy`;
 
     const completion = await openai.chat.completions.create({
@@ -149,23 +155,22 @@ function isValidMove(fromRow, fromCol, toRow, toCol) {
 function validateActions(actions, state) {
   return actions.map(action => {
     const entity = state.entities.find(e => e.id === action.entityId);
-    if (!entity) return null;
+    if (!entity || entity.isDead) return null;
 
     // Validate skill exists in entity's skills
     const validSkill = entity.skills.find(s =>
-        s.skill.name === action.skillName &&
-        s.skill.id === action.skillId
+        s.name === action.skillName &&
+        s.id === action.skillId
     );
 
     if (!validSkill) {
-      const fallbackSkill = entity.skills[0].skill;
+      const fallbackSkill = entity.skills[0];
       action.skillName = fallbackSkill.name;
       action.skillId = fallbackSkill.id;
     }
 
     // Validate movement
     if (!isValidMove(entity.rowPos, entity.colPos, action.rowPos, action.colPos)) {
-      // If invalid move, keep current position
       action.rowPos = entity.rowPos;
       action.colPos = entity.colPos;
     }
@@ -183,9 +188,25 @@ function validateActions(actions, state) {
       action.colPos = entity.colPos;
     }
 
+    // Validate targets are not dead
+    const validTargets = action.targetId.filter(targetId => {
+      const targetMonster = state.entities.find(e => e.id === targetId);
+      const targetCharacter = state.characters.find(c => c.id === targetId);
+      const target = targetMonster || targetCharacter;
+      return target && !target.isDead;
+    });
+
+    if (validTargets.length === 0) {
+      // If no valid targets, find a new living target
+      const livingTargets = state.characters.filter(c => !c.isDead);
+      if (livingTargets.length > 0) {
+        validTargets.push(livingTargets[0].id);
+      }
+    }
+
     return {
       entityId: action.entityId,
-      targetId: Array.isArray(action.targetId) ? action.targetId : [action.targetId],
+      targetId: validTargets,
       skillName: action.skillName,
       skillId: action.skillId,
       rowPos: action.rowPos,
@@ -195,17 +216,19 @@ function validateActions(actions, state) {
 }
 
 function generateFallbackActions(entities) {
-  return entities.map(entity => {
-    const defaultSkill = entity.skills[0].skill;
-    return {
-      entityId: entity.id,
-      targetId: [],
-      skillName: defaultSkill.name,
-      skillId: defaultSkill.id,
-      rowPos: entity.rowPos,
-      colPos: entity.colPos
-    };
-  });
+  return entities
+      .filter(entity => !entity.isDead)
+      .map(entity => {
+        const defaultSkill = entity.skills[0];
+        return {
+          entityId: entity.id,
+          targetId: [],
+          skillName: defaultSkill.name,
+          skillId: defaultSkill.id,
+          rowPos: entity.rowPos,
+          colPos: entity.colPos
+        };
+      });
 }
 
 function createResponse(statusCode, body) {
