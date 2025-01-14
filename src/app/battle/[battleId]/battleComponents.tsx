@@ -557,7 +557,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
     return (
         <>
             <div className="w-full text-xl text-center p-10 select-none">
-                <div>Round {roomData?.round}</div>
+                {!currentTurn && <div>Place your character</div>}
                 {currentTurn && currentTurn.subjectName && (
                     <div className="text-sm">Current Turn: {currentTurn?.subjectName}</div>
                 )}
