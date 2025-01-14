@@ -160,7 +160,7 @@ export function CharacterDetailSection({ character }: CharacterDetailSectionProp
                         </div>
                         <Dialog>
                             <DialogTrigger asChild>
-                                <Button>Edit the profile</Button>
+                                <Button className="bg-main-black rounded-none hover:bg-black">Edit the profile</Button>
                             </DialogTrigger>
                             <DialogContent className="w-1/2 bg-bright-red border-none sm:rounded-none select-none max-w-[800px] min-w-[400px]">
                                 <CharacterUpdateForm character={character} />

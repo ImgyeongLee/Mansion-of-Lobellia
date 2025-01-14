@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Character, CharacterSkill } from '@/static/types/character';
 import { useParams, useRouter } from 'next/navigation';
@@ -30,10 +29,11 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ActionChat, BuffChat, DebuffChat, MyChat, OpponentChat, ResultChat, SystemChat } from './chats';
-import { handleCharacterAction } from '@/lib/handlers/characterSkillHandler';
+import { handleCharacterAction, handleCharacterItem } from '@/lib/handlers/characterSkillHandler';
 import { cn } from '@/lib/utils';
 import { AIResponse, BattleState, EntityWithSkills } from '@/static/types/lambdaAi';
 import { handleAIResponse } from '@/lib/handlers/monsterSkillHandler';
+import { Button } from '@/components/ui/button';
 
 export function BattleSection({ activeCharacter }: { activeCharacter: Character }) {
     const { toast } = useToast();
@@ -94,10 +94,18 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                 },
                 (payload) => {
                     if (payload.eventType === 'UPDATE') {
+                        console.log('UPDATE!!!');
                         setQueue((prev) => {
                             const updatedQueue = prev.map((q) =>
                                 q.subjectId === payload.new.subjectId ? { ...q, ...payload.new } : q
                             );
+                            setCurrentTurn(updatedQueue.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order)[0]);
+                            return updatedQueue.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order);
+                        });
+                    } else if (payload.eventType === 'DELETE') {
+                        console.log('DELETE!!!!!');
+                        setQueue((prev) => {
+                            const updatedQueue = prev.filter((q) => q.subjectId !== payload.old.subjectId);
                             setCurrentTurn(updatedQueue.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order)[0]);
                             return updatedQueue.sort((a: TurnQueue, b: TurnQueue) => a.order - b.order);
                         });
@@ -173,13 +181,14 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
         const getAIResponse = async () => {
             if (!roomData) return;
 
+            console.log('GET THE AI RESPONSE!!!');
+            setWaitMonster(true);
             const roomState: BattleState = {
                 roomId: roomData.id,
                 round: roomData.round,
                 entities: roomData.entities as EntityWithSkills[],
                 characters: roomData.participants,
             };
-            setWaitMonster(true);
 
             try {
                 const result = await fetch('/api/ai/get_turn', {
@@ -1035,7 +1044,27 @@ export function UserMenuBar({
 }) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [skills, setSkills] = useState<CharacterSkill[]>([]);
-    const [items, setItems] = useState<Item[]>([]);
+    const [items, setItems] = useState<{ item: Item; amount: number }[]>([]);
+
+    const handleUseItem = async (item: Item) => {
+        try {
+            if (!item) return;
+            await handleCharacterItem(character, item);
+            await fetch('/api/character/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    formData: {
+                        ...character,
+                    },
+                }),
+            });
+        } catch (error) {
+            console.error('Error with using item: ', error);
+        }
+    };
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -1077,13 +1106,22 @@ export function UserMenuBar({
                 },
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        setItems((prev) => [...prev, payload.new as Item]);
+                        setItems((prev) => {
+                            const newItem = payload.new as { item: Item; amount: number };
+                            return newItem.amount > 0 ? [...prev, newItem] : prev;
+                        });
                     } else if (payload.eventType === 'UPDATE') {
                         setItems((prev) =>
-                            prev.map((item) => (item.id === payload.new.id ? (payload.new as Item) : item))
+                            prev
+                                .map((item) =>
+                                    item.item.id === payload.new.id
+                                        ? (payload.new as { item: Item; amount: number })
+                                        : item
+                                )
+                                .filter((item) => item.amount > 0)
                         );
                     } else if (payload.eventType === 'DELETE') {
-                        setItems((prev) => prev.filter((item) => item.id !== payload.old.id));
+                        setItems((prev) => prev.filter((item) => item.item.id !== payload.old.id));
                     }
                 }
             )
@@ -1151,7 +1189,19 @@ export function UserMenuBar({
                             );
                         })}
                         {items.map((item) => {
-                            return <ItemCard key={item.id} item={item} />;
+                            return (
+                                <ItemCard key={item.item.id} item={item.item} amount={item.amount}>
+                                    <div className="mt-3">
+                                        <Button
+                                            className="bg-main-white rounded-none text-middle-red hover:text-main-white hover:bg-main-black"
+                                            onClick={async () => {
+                                                await handleUseItem(item.item);
+                                            }}>
+                                            Use
+                                        </Button>
+                                    </div>
+                                </ItemCard>
+                            );
                         })}
                     </div>
                 </div>

@@ -219,10 +219,11 @@ function MonsterCard({ monster }: MonsterCardProps) {
 
 interface ItemCardProps {
     item: Item;
+    amount?: number;
     children?: React.ReactNode;
 }
 
-export function ItemCard({ item, children }: ItemCardProps) {
+export function ItemCard({ item, amount, children }: ItemCardProps) {
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -242,6 +243,7 @@ export function ItemCard({ item, children }: ItemCardProps) {
                     />
                     <div className="text-lg">{item.name}</div>
                     <div className={`${ubuntu.className} text-sm`}>{item.description}</div>
+                    {amount && <div className={`${ubuntu.className} text-sm`}>Amount: {amount}</div>}
                     {children}
                 </div>
             </DialogContent>
@@ -292,7 +294,7 @@ export function CharacterInventory({ characterId }: { characterId: string }) {
     return (
         <div className="flex flex-row gap-2">
             {items.map((item) => (
-                <ItemCard key={item.item.id} item={item.item} />
+                <ItemCard key={item.item.id} item={item.item} amount={item.amount}></ItemCard>
             ))}
         </div>
     );

@@ -39,6 +39,7 @@ export async function handleAIResponse(
                             return;
                         }
                         const entityDamage = calculateEntityAttackAmount(entity, 1, character);
+                        character.currentHp -= entityDamage;
                         await createChat({
                             roomId: roomId,
                             sender: 'System',
@@ -46,7 +47,6 @@ export async function handleAIResponse(
                             image: null,
                             chatType: 'Result',
                         });
-                        character.currentHp -= entityDamage;
                         if (character.currentHp <= 0) {
                             await createChat({
                                 roomId: roomId,
