@@ -342,7 +342,7 @@ export function CharacterCreationForm({ sub }: { sub: string }) {
                                 </div>
                             </div>
                         </div>
-                        <div className="my-5">✦ Select Skills</div>
+                        <div className="my-5">✦ Select 3 Skills</div>
                         <div className="flex flex-row gap-1">
                             {skills.map((skill) => {
                                 return (

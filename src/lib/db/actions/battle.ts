@@ -167,17 +167,20 @@ export async function getFirstTurn(battleRoomId: string) {
 
 export async function proceedTurnQueue(subjectId: string, offset: number) {
     try {
-        const subject = await prisma.turnQueue.findFirst({
+        const turn = await prisma.turnQueue.findFirst({
             where: {
                 subjectId: subjectId,
             },
         });
 
-        if (!subject) return { success: false };
+        if (!turn) {
+            console.error('No such turn');
+            return { success: false };
+        }
 
         await prisma.turnQueue.update({
             where: {
-                id: subject.id,
+                id: turn.id,
             },
             data: {
                 order: {
@@ -186,7 +189,7 @@ export async function proceedTurnQueue(subjectId: string, offset: number) {
             },
         });
 
-        return { sucess: true };
+        return { success: true };
     } catch (error) {
         console.log(error);
         return { success: false };

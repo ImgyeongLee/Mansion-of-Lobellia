@@ -78,6 +78,10 @@ export async function POST(req: NextRequest) {
                     where: {
                         roomId: battleId,
                     },
+                    orderBy: {
+                        order: 'asc',
+                    },
+                    take: 2,
                 });
 
                 if (firstSecondTurn[0]) {

@@ -1,8 +1,10 @@
 import { Character } from '@/static/types/character';
 import { AIResponse } from '@/static/types/lambdaAi';
 import { Entity, MonsterSkill } from '@/static/types/monster';
+import { createChat } from '../db/actions/chat';
 
 export async function handleAIResponse(
+    roomId: string,
     response: AIResponse,
     entity: Entity,
     skill?: MonsterSkill,
@@ -17,14 +19,26 @@ export async function handleAIResponse(
     if (skill) {
         if (skill.name == 'Clumsy Attack') {
             if (targetCharacters) {
-                targetCharacters.forEach((character) => {
-                    const entityDamage = calculateEntityAttackAmount(entity, 1, character);
-                    character.currentHp -= entityDamage;
-                    if (character.currentHp <= 0) {
-                        character.isDead = true;
-                        character.currentHp = 0;
-                    }
-                });
+                Promise.all(
+                    targetCharacters.map(async (character) => {
+                        if (character.isImmortal) {
+                            await createChat({
+                                roomId: roomId,
+                                sender: 'System',
+                                body: `${character.name} is currently immortal`,
+                                image: null,
+                                chatType: 'Result',
+                            });
+                            return;
+                        }
+                        const entityDamage = calculateEntityAttackAmount(entity, 1, character);
+                        character.currentHp -= entityDamage;
+                        if (character.currentHp <= 0) {
+                            character.isDead = true;
+                            character.currentHp = 0;
+                        }
+                    })
+                );
             }
         } else if (skill.name == 'Clumsy Heal') {
             if (targetEntites) {

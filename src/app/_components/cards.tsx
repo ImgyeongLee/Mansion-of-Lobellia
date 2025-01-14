@@ -52,7 +52,12 @@ export function SkillCard({ skill, isDisplay, isActive, isHighLight, onClick }: 
                                 'border-none': !isHighLight,
                                 'bg-black': isDisplay,
                             }
-                        )}></Button>
+                        )}
+                        style={{
+                            backgroundImage: skill.image ? `url(${skill.image})` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}></Button>
                 </TooltipTrigger>
                 <TooltipContent className={cn('bg-black w-[150px] flex flex-col')}>
                     <div className="text-center text-lg">{skill.name}</div>
@@ -63,12 +68,12 @@ export function SkillCard({ skill, isDisplay, isActive, isHighLight, onClick }: 
                     {skill.requiredCost > 0 && (
                         <div className={`${ubuntu.className}`}>Required Cost: {skill.requiredCost}</div>
                     )}
-                  {skill.type && skill.range && (
-                      <div className={`${ubuntu.className}`}>
-                        <p>Type: {skill.type}</p>
-                        <p>Range: {skill.range}</p>
-                      </div>
-                  )}
+                    {skill.type && skill.range && (
+                        <div className={`${ubuntu.className}`}>
+                            <p>Type: {skill.type}</p>
+                            <p>Range: {skill.range}</p>
+                        </div>
+                    )}
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>

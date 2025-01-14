@@ -11,14 +11,14 @@ export async function middleware(request: NextRequest) {
 
     if (request.nextUrl.pathname === '/') {
         if (user) {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            return NextResponse.redirect(new URL('/dashboard/character', request.url));
         }
         return response;
     }
 
     if (isBattlePage) {
         if (!user) {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            return NextResponse.redirect(new URL('/dashboard/character', request.url));
         }
         return response;
     }
@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
         if (!user) {
             return NextResponse.redirect(new URL('/', request.url));
         } else if (!user.isAdmin) {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            return NextResponse.redirect(new URL('/dashboard/character', request.url));
         }
         return response;
     }
@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
         }
         return response;
     } else if (user) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+        return NextResponse.redirect(new URL('/dashboard/character', request.url));
     }
 }
 

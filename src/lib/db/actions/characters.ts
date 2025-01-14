@@ -1,12 +1,14 @@
 import { Character, CharacterCreationFormData } from '@/static/types/character';
 import prisma from '../prisma';
 import { supabase } from '../supabase/client';
+import { Prisma } from '@prisma/client';
 
 export async function createCharacter(formData: CharacterCreationFormData, userSkills: string[]) {
     try {
         const newCharacter = await prisma.character.create({
             data: {
                 ...formData,
+                money: 100,
             },
         });
 
@@ -42,13 +44,16 @@ export async function deleteCharacter(characterId: string) {
 
 export async function updateCharacter(character: Character) {
     try {
+        const updateData = Prisma.validator<Prisma.CharacterUpdateInput>()({
+            ...character,
+            createdAt: undefined,
+        });
+
         const updatedCharacter = await prisma.character.update({
             where: {
                 id: character.id,
             },
-            data: {
-                ...character,
-            },
+            data: updateData,
         });
 
         return { success: true, character: updatedCharacter };

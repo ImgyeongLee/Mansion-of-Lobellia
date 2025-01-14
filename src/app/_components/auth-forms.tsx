@@ -42,7 +42,7 @@ export function SignInForm() {
             handleEmail(values.email);
             if (result.success && result.nextStep != 'CONFIRM_SIGN_UP') {
                 handleEmail('');
-                router.push('/dashboard');
+                router.push('/dashboard/character');
             } else if (result.success && result.nextStep == 'CONFIRM_SIGN_UP') {
                 router.push('/auth/verify/signup');
             }
@@ -97,6 +97,7 @@ export function SignInForm() {
                             />
                         </div>
                         <div className="mt-10 flex flex-col">
+                            <div className="text-xs">{error}</div>
                             <Button
                                 type="submit"
                                 disabled={isLoading}
@@ -335,6 +336,7 @@ export function VerifySignUpForm() {
                         </div>
                     </div>
                     <div className="flex flex-row justify-center items-center">
+                        <div className="text-xs">{error}</div>
                         <Button
                             type="submit"
                             disabled={isLoading}

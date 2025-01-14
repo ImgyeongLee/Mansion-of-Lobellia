@@ -2,54 +2,134 @@ import { Character } from '@/static/types/character';
 import { Item } from '@/static/types/item';
 import { Entity } from '@/static/types/monster';
 import { CharacterSkill } from '@prisma/client';
+import { createChat } from '../db/actions/chat';
 
 export async function handleCharacterAction(
+    roomId: string,
     character: Character,
     skill?: CharacterSkill,
     targetEntities?: Entity[],
     targetCharacters?: Character[]
 ) {
     if (skill) {
+        await createChat({
+            roomId: roomId,
+            sender: 'System',
+            body: `${character.name} used ${skill.name} skill`,
+            image: null,
+            chatType: 'Action',
+        });
+
         if (skill.name == 'Swing') {
             if (targetEntities) {
-                targetEntities.forEach((entity: Entity) => {
-                    entity.currentHp -= calculateCharacterAttackAmount(character, 1, entity);
+                targetEntities.forEach(async (entity: Entity) => {
+                    const damage = calculateCharacterAttackAmount(character, 1, entity);
+                    entity.currentHp -= damage;
+                    await createChat({
+                        roomId: roomId,
+                        sender: 'System',
+                        body: `${entity.name} got ${damage} damage!`,
+                        image: null,
+                        chatType: 'Result',
+                    });
                     if (entity.currentHp <= 0) {
                         entity.currentHp = 0;
                         entity.isDead = true;
+                        await createChat({
+                            roomId: roomId,
+                            sender: 'System',
+                            body: `${entity.name} is dead.`,
+                            image: null,
+                            chatType: 'Debuff',
+                        });
                     }
                 });
             }
         } else if (skill.name == 'Strike') {
             if (targetEntities) {
-                targetEntities[0].currentHp -= calculateCharacterAttackAmount(character, 1.3, targetEntities[0]);
+                const damage = calculateCharacterAttackAmount(character, 1.3, targetEntities[0]);
+                targetEntities[0].currentHp -= damage;
+                await createChat({
+                    roomId: roomId,
+                    sender: 'System',
+                    body: `${targetEntities[0].name} got ${damage} damage!`,
+                    image: null,
+                    chatType: 'Result',
+                });
                 if (targetEntities[0].currentHp <= 0) {
                     targetEntities[0].currentHp = 0;
                     targetEntities[0].isDead = true;
+                    await createChat({
+                        roomId: roomId,
+                        sender: 'System',
+                        body: `${targetEntities[0].name} is dead.`,
+                        image: null,
+                        chatType: 'Debuff',
+                    });
                 }
             }
         } else if (skill.name == 'Adrenaline') {
             character.attackBuffedAmount = 30;
             character.attackBuffedTurn = 2;
+            await createChat({
+                roomId: roomId,
+                sender: 'System',
+                body: `${character.name}'s attack power has been 30% increased for 2 turns!`,
+                image: null,
+                chatType: 'Buff',
+            });
         } else if (skill.name == 'Defensive Stance') {
             character.defenseBuffedAmount = 30;
             character.defenseBuffedTurn = 2;
+            await createChat({
+                roomId: roomId,
+                sender: 'System',
+                body: `${character.name}'s defense power has been 30% increased for 2 turns!`,
+                image: null,
+                chatType: 'Buff',
+            });
         } else if (skill.name == 'Vibrating Smash') {
             if (targetEntities) {
-                targetEntities[0].currentHp -= calculateCharacterAttackAmount(character, 3, targetEntities[0]);
+                const damage = calculateCharacterAttackAmount(character, 3, targetEntities[0]);
+                targetEntities[0].currentHp -= damage;
                 character.isStun = true;
+
+                await createChat({
+                    roomId: roomId,
+                    sender: 'System',
+                    body: `${targetEntities[0].name} got ${damage} damage!`,
+                    image: null,
+                    chatType: 'Result',
+                });
+
                 if (targetEntities[0].currentHp <= 0) {
                     targetEntities[0].currentHp = 0;
                     targetEntities[0].isDead = true;
+                    await createChat({
+                        roomId: roomId,
+                        sender: 'System',
+                        body: `${targetEntities[0].name} is dead.`,
+                        image: null,
+                        chatType: 'Debuff',
+                    });
                 }
             }
         } else if (skill.name == 'First Aid') {
             if (targetCharacters) {
                 targetCharacters.forEach((character: Character) => {
                     character.currentHp += character.attack;
+
                     if (character.currentHp >= character.maxHp) {
                         character.currentHp = character.maxHp;
                     }
+                });
+
+                await createChat({
+                    roomId: roomId,
+                    sender: 'System',
+                    body: `Allies recovers ${character.attack} HP!`,
+                    image: null,
+                    chatType: 'Buff',
                 });
             }
         } else if (skill.name == 'Inspire') {
@@ -60,14 +140,36 @@ export async function handleCharacterAction(
                         character.currentCost = character.maxCost;
                     }
                 });
+
+                await createChat({
+                    roomId: roomId,
+                    sender: 'System',
+                    body: `Allies recovers 50% of their max Cost!`,
+                    image: null,
+                    chatType: 'Buff',
+                });
             }
         } else if (skill.name == 'Resurrection') {
             if (targetCharacters) {
+                await createChat({
+                    roomId: roomId,
+                    sender: 'System',
+                    body: `${targetCharacters[0].name} has been reborn!`,
+                    image: null,
+                    chatType: 'Buff',
+                });
                 targetCharacters[0].isDead = false;
                 targetCharacters[0].currentHp = Math.floor(targetCharacters[0].maxHp * 0.5);
             }
         } else if (skill.name == 'Guardian') {
             if (targetCharacters) {
+                await createChat({
+                    roomId: roomId,
+                    sender: 'System',
+                    body: `${character.name} will protect ${targetCharacters[0].name} for 2 turns!`,
+                    image: null,
+                    chatType: 'Buff',
+                });
                 targetCharacters[0].protectorId = character.id;
                 targetCharacters[0].protectedTurn = 2;
                 character.defenseBuffedAmount = 50;
@@ -75,6 +177,13 @@ export async function handleCharacterAction(
             }
         } else if (skill.name == 'Focus') {
             if (targetCharacters) {
+                await createChat({
+                    roomId: roomId,
+                    sender: 'System',
+                    body: `${targetCharacters[0].name} is focused!`,
+                    image: null,
+                    chatType: 'Buff',
+                });
                 targetCharacters[0].isFocused = true;
             }
         }

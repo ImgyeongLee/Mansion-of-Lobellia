@@ -227,10 +227,9 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                         }
                                     }
 
-                                    // 업데이트 API 호출
                                     await Promise.all([
                                         ...characters.map(async (character) => {
-                                            const { skills, inventory, createdAt, ...otherData } = character;
+                                            const { skills, inventory, ...otherData } = character;
                                             await fetch('/api/character/update', {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
@@ -238,7 +237,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                                             });
                                         }),
                                         ...entities.map(async (entity) => {
-                                            const { skills, items, createdAt, ...otherData } = entity;
+                                            const { skills, items, ...otherData } = entity;
                                             await fetch('/api/entity/update', {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
@@ -284,6 +283,8 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
         ) {
             previousTurnIdRef.current = currentTurn.subjectId;
             getAIResponse();
+        } else if (currentTurn) {
+            previousTurnIdRef.current = currentTurn.subjectId;
         }
     }, [currentTurn, roomData, currentCharacter.id, entities, characters, battleId]);
 
@@ -353,7 +354,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
 
         try {
             if (!skill) return;
-            await handleCharacterAction(currentCharacter, skill, targetEntities, targetCharacters);
+            await handleCharacterAction(battleId, currentCharacter, skill, targetEntities, targetCharacters);
             await fetch('/api/character/update', {
                 method: 'POST',
                 headers: {
@@ -366,11 +367,10 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                 }),
             });
             if (targetEntities.length > 0) {
-                console.log('TARGET ENTITY = ', targetEntities);
                 Promise.all(
                     targetEntities.map(async (entity) => {
                         if (entity) {
-                            const { skills, items, createdAt, ...otherData } = entity;
+                            const { skills, items, ...otherData } = entity;
                             await fetch('/api/entity/update', {
                                 method: 'POST',
                                 headers: {
@@ -390,7 +390,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                 Promise.all(
                     targetCharacters.map(async (character) => {
                         if (character) {
-                            const { skills, inventory, createdAt, ...otherData } = character;
+                            const { skills, inventory, ...otherData } = character;
                             await fetch('/api/character/update', {
                                 method: 'POST',
                                 headers: {
@@ -717,7 +717,6 @@ export function InfoSidebar() {
                 },
                 (payload) => {
                     if (payload.eventType === 'UPDATE') {
-                        console.log('??????? This should be called!!');
                         setCharacters((prev) =>
                             prev.map((char) => (char.id === payload.new.id ? { ...char, ...payload.new } : char))
                         );

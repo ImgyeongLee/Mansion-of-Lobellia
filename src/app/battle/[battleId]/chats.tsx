@@ -8,17 +8,26 @@ interface ChatProps {
 }
 
 export function MyChat({ chat }: ChatProps) {
+    const formattedTime = new Date(chat.createdAt).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
     return (
         <div className="flex flex-col">
             <div className="bg-main-white mx-2 text-main-black px-3 py-2 max-w-[82%] self-end rounded-tr-lg rounded-tl-lg rounded-bl-lg text-base">
                 {chat.body}
             </div>
-            <div className={`${ubuntu.className} self-end mr-2 text-xs mt-1`}>20:40</div>
+            <div className={`${ubuntu.className} self-end mr-2 text-xs mt-1`}>{formattedTime}</div>
         </div>
     );
 }
 
 export function OpponentChat({ chat }: ChatProps) {
+    const formattedTime = new Date(chat.createdAt).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
     return (
         <div className="flex flex-row w-full">
             <div className="rounded-full h-[40px] w-[40px] min-h-[40px] min-w-[40px] bg-bright-red ml-2 self-center" />
@@ -26,7 +35,7 @@ export function OpponentChat({ chat }: ChatProps) {
                 <div className="bg-main-white mx-2 text-main-black px-3 py-2 max-w-[82%] self-start rounded-lg text-base">
                     {chat.body}
                 </div>
-                <div className={`${ubuntu.className} self-start ml-2 text-xs mt-1`}>20:40</div>
+                <div className={`${ubuntu.className} self-start ml-2 text-xs mt-1`}>{formattedTime}</div>
             </div>
         </div>
     );

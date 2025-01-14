@@ -2,6 +2,7 @@ import { Entity, Monster } from '@/static/types/monster';
 import prisma from '../prisma';
 import { getSkillsByMonster } from './monsters';
 import { supabase } from '../supabase/client';
+import { Prisma } from '@prisma/client';
 
 export async function getEntity(entityId: string) {
     try {
@@ -88,16 +89,19 @@ export async function deleteEntity(entityId: string) {
 
 export async function updateEntity(entityId: string, data: Entity) {
     try {
-        const updated = await prisma.entity.update({
+        const updateData = Prisma.validator<Prisma.CharacterUpdateInput>()({
+            ...data,
+            createdAt: undefined,
+        });
+
+        const updatedEntity = await prisma.entity.update({
             where: {
                 id: entityId,
             },
-            data: {
-                ...data,
-            },
+            data: updateData,
         });
 
-        return { success: true, data: updated };
+        return { success: true, data: updatedEntity };
     } catch (error) {
         console.log(error);
         return { success: false };
