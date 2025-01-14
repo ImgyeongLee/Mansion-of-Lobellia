@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ChevronDown, Skull } from 'lucide-react';
 import { BattleRoom, Chat, ChatBody, TurnQueue } from '@/static/types/battle';
-import { Entity } from '@/static/types/monster';
+import { Entity, MonsterSkill } from '@/static/types/monster';
 import { ubuntu } from '@/static/fonts';
 import { supabase } from '@/lib/db/supabase/client';
 import { createChat, getChats } from '@/lib/db/actions/chat';
@@ -32,7 +32,8 @@ import {
 import { ActionChat, BuffChat, DebuffChat, MyChat, OpponentChat, ResultChat, SystemChat } from './chats';
 import { handleCharacterAction } from '@/lib/handlers/characterSkillHandler';
 import { cn } from '@/lib/utils';
-import { BattleState, EntityWithSkills } from '@/static/types/lambdaAi';
+import { AIResponse, BattleState, EntityWithSkills } from '@/static/types/lambdaAi';
+import { handleAIResponse } from '@/lib/handlers/monsterSkillHandler';
 
 export function BattleSection({ activeCharacter }: { activeCharacter: Character }) {
     const { toast } = useToast();
@@ -47,6 +48,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
     const [queue, setQueue] = useState<TurnQueue[]>([]);
     const [skill, setSkill] = useState<CharacterSkill>();
     const [currentTurn, setCurrentTurn] = useState<TurnQueue>();
+    const previousTurnIdRef = useRef<string | null>(null);
     const [targetPosition, setTargetPosition] = useState<{
         rowIndex: number;
         colIndex: number;
@@ -169,36 +171,121 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
 
     useEffect(() => {
         const getAIResponse = async () => {
-            if (roomData) {
-                const roomState: BattleState = {
-                    roomId: roomData.id,
-                    round: roomData.round,
-                    entities: roomData.entities as EntityWithSkills[],
-                    characters: roomData.participants,
-                };
+            if (!roomData) return;
 
-                console.log('roomState == ', roomState);
+            const roomState: BattleState = {
+                roomId: roomData.id,
+                round: roomData.round,
+                entities: roomData.entities as EntityWithSkills[],
+                characters: roomData.participants,
+            };
+            setWaitMonster(true);
+
+            try {
                 const result = await fetch('/api/ai/get_turn', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(roomState),
                 });
+
                 if (result.ok) {
                     const data = await result.json();
                     if (data.body) {
                         const actualData = JSON.parse(data.body);
-                        console.log(actualData);
+                        const action = actualData.actions.find(
+                            (action: AIResponse) => action.entityId === currentTurn?.subjectId
+                        );
+
+                        if (action) {
+                            const activeEntity = entities.find((entity) => entity.id === currentTurn?.subjectId);
+                            if (activeEntity && action.skillId) {
+                                const monsterSkill = await fetch(`/api/skill/${action.skillId}`);
+                                if (monsterSkill.ok) {
+                                    const skillData = await monsterSkill.json();
+                                    const skill = skillData.data.skill as MonsterSkill;
+
+                                    if (skill.name === 'Clumsy Attack') {
+                                        if (action.targetId.length > 0) {
+                                            const targetCharacters = characters.filter(
+                                                (character) => action.targetId[0] === character.id
+                                            );
+                                            await handleAIResponse(action, activeEntity, skill, targetCharacters);
+                                        }
+                                    } else {
+                                        if (action.targetId.length > 0) {
+                                            const targetEntities = entities.filter(
+                                                (entity) => action.targetId[0] === entity.id
+                                            );
+                                            console.log('ACTION IS == ', targetEntities);
+                                            await handleAIResponse(
+                                                action,
+                                                activeEntity,
+                                                skill,
+                                                undefined,
+                                                targetEntities
+                                            );
+                                        }
+                                    }
+
+                                    // 업데이트 API 호출
+                                    await Promise.all([
+                                        ...characters.map(async (character) => {
+                                            const { skills, inventory, createdAt, ...otherData } = character;
+                                            await fetch('/api/character/update', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ formData: otherData }),
+                                            });
+                                        }),
+                                        ...entities.map(async (entity) => {
+                                            const { skills, items, createdAt, ...otherData } = entity;
+                                            await fetch('/api/entity/update', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ formData: otherData }),
+                                            });
+                                        }),
+                                    ]);
+
+                                    await fetch('/api/battle/process-round', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ battleId: battleId }),
+                                    });
+                                } else {
+                                    toast({
+                                        title: 'Error',
+                                        description: 'Failed to proceed entity action',
+                                        variant: 'destructive',
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
+            } catch (error) {
+                console.error('Failed to proceed monster action:', error);
+                toast({
+                    title: 'Error',
+                    description: 'Failed to proceed entity action',
+                    variant: 'destructive',
+                });
+            } finally {
+                setWaitMonster(false);
             }
         };
 
-        if (currentTurn && currentTurn.subjectType === 'Monster' && roomData) {
-            if (currentCharacter.id === roomData.hostId) {
-                getAIResponse();
-            }
+        if (
+            currentTurn &&
+            currentTurn.subjectType === 'Monster' &&
+            roomData &&
+            currentCharacter.id === roomData.hostId &&
+            currentTurn.subjectId !== previousTurnIdRef.current
+        ) {
+            previousTurnIdRef.current = currentTurn.subjectId;
+            getAIResponse();
         }
-    }, [currentTurn, roomData]);
+    }, [currentTurn, roomData, currentCharacter.id, entities, characters, battleId]);
 
     // real-time subscriptions
     useEffect(() => {
@@ -457,6 +544,7 @@ export function BattleSection({ activeCharacter }: { activeCharacter: Character 
                 {currentTurn && currentTurn.subjectName && (
                     <div className="text-sm">Current Turn: {currentTurn?.subjectName}</div>
                 )}
+                {waitMonster && <div className="text-xs">Processing {currentTurn?.subjectName} turn...</div>}
             </div>
             <section className="w-full h-full overflow-y-auto overflow-x-auto p-10">
                 <div className="flex flex-col items-center justify-center min-h-full gap-1">

@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
                 characters.characters.map(async (character) => {
                     if (character.isDead) {
                         characterCount += 1;
+                        await prisma.turnQueue.deleteMany({
+                            where: {
+                                subjectId: character.id,
+                                roomId: battleId,
+                            },
+                        });
                     }
                     await prisma.character.update({
                         where: {
@@ -44,11 +50,19 @@ export async function POST(req: NextRequest) {
                 })
             );
 
-            entities.entities.forEach((entity) => {
-                if (entity.isDead) {
-                    entityCount += 1;
-                }
-            });
+            Promise.all(
+                entities.entities.map(async (entity) => {
+                    if (entity.isDead) {
+                        entityCount += 1;
+                        await prisma.turnQueue.deleteMany({
+                            where: {
+                                subjectId: entity.id,
+                                roomId: battleId,
+                            },
+                        });
+                    }
+                })
+            );
 
             if (entityCount >= ELEN || characterCount >= CLEN) {
                 await prisma.battleRoom.update({

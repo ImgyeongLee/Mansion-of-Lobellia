@@ -6,6 +6,7 @@ export interface AIResponse {
     entityId: string;
     targetId: string[] | null;
     skillId: string | null;
+    skillName: string | null;
     rowPos: number;
     colPos: number;
 }
@@ -16,10 +17,10 @@ export interface EntityWithSkills extends Entity {
         image: string | null;
         name: string;
         description: string | null;
-        range: "Self" | "Narrow" | "Normal" | "Wide";
+        range: 'Self' | 'Narrow' | 'Normal' | 'Wide';
         isSelfTargeting: boolean;
         isEntire: boolean;
-    }[]
+    }[];
 }
 
 export interface BattleState {
